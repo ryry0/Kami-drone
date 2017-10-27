@@ -1,0 +1,47 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+ANALOG_EVENT	ctrlrnix.h	/^const int ANALOG_EVENT = 2;$/;"	v
+BUTTON_EVENT	ctrlrnix.h	/^const int BUTTON_EVENT = 1;$/;"	v
+CC	makefile	/^CC=g++$/;"	m
+CFLAGS	makefile	/^CFLAGS=-c$/;"	m
+CTRLRNIX_H_	ctrlrnix.h	2;"	d
+Ctrlr	ctrlrnix.cpp	/^Ctrlr::Ctrlr(const string joyAddressArg) $/;"	f	class:Ctrlr
+Ctrlr	ctrlrnix.h	/^class Ctrlr$/;"	c
+DEFAULTADDRESS	ctrlrnix.h	/^const string DEFAULTADDRESS="\/dev\/input\/js0";$/;"	v
+EXECUTABLE	makefile	/^EXECUTABLE=joytestprog$/;"	m
+LDFLAGS	makefile	/^LDFLAGS=$/;"	m
+NUM_ANALOG_STICKS	ctrlrnix.h	/^const int NUM_ANALOG_STICKS = 3; \/\/the logitech wireless has 4$/;"	v
+NUM_AXES	ctrlrnix.h	/^const int NUM_AXES = 2;$/;"	v
+NUM_BUTTONS	ctrlrnix.h	/^const int NUM_BUTTONS = 11;$/;"	v
+OBJECTS	makefile	/^OBJECTS=$(SOURCES:.cpp=.o)$/;"	m
+SOURCES	makefile	/^SOURCES=ctrlrnix.cpp joytest.cpp$/;"	m
+XAXIS	ctrlrnix.h	/^const int XAXIS = 0;$/;"	v
+XAXIS2	ctrlrnix.h	/^const int XAXIS2 = 3;$/;"	v
+XHAT	ctrlrnix.h	/^const int XHAT = 4;$/;"	v
+YAXIS	ctrlrnix.h	/^const int YAXIS = 1;$/;"	v
+YAXIS2	ctrlrnix.h	/^const int YAXIS2 = 2;$/;"	v
+YHAT	ctrlrnix.h	/^const int YHAT = 5;$/;"	v
+buttons	ctrlrnix.h	/^	int buttons[NUM_BUTTONS];$/;"	m	struct:controllerState
+contEv	ctrlrnix.h	/^		controllerEvent * contEv;	$/;"	m	class:Ctrlr
+contSt	ctrlrnix.h	/^		controllerState * contSt;$/;"	m	class:Ctrlr
+controllerEvent	ctrlrnix.h	/^struct controllerEvent$/;"	s
+controllerState	ctrlrnix.h	/^struct controllerState$/;"	s
+controllerfd	ctrlrnix.h	/^		int controllerfd;		\/\/controller file descriptor$/;"	m	class:Ctrlr
+getButton	ctrlrnix.h	/^		int getButton(int buttonnum) const {return contSt->buttons[buttonnum];}$/;"	f	class:Ctrlr
+getStickvalue	ctrlrnix.h	/^		int getStickvalue(int sticknum) const {return contSt->stick[sticknum];}$/;"	f	class:Ctrlr
+joystickAddress	ctrlrnix.h	/^		string joystickAddress;$/;"	m	class:Ctrlr
+main	joytest.cpp	/^int main()$/;"	f
+number	ctrlrnix.h	/^	unsigned char number;	\/\/number of the button or stick$/;"	m	struct:controllerEvent
+openController	ctrlrnix.cpp	/^bool Ctrlr::openController(string joyAddressArg)$/;"	f	class:Ctrlr
+readControllerEvent	ctrlrnix.cpp	/^void Ctrlr::readControllerEvent()$/;"	f	class:Ctrlr
+stick	ctrlrnix.h	/^	int stick[NUM_AXES*NUM_ANALOG_STICKS];$/;"	m	struct:controllerState
+time	ctrlrnix.h	/^	unsigned int time;	\/\/time event happened$/;"	m	struct:controllerEvent
+type	ctrlrnix.h	/^	unsigned char type;	\/\/type of event (button or analog)$/;"	m	struct:controllerEvent
+update	ctrlrnix.cpp	/^void Ctrlr::update()$/;"	f	class:Ctrlr
+value	ctrlrnix.h	/^	short value;		\/\/value of the analog stick\/buttons$/;"	m	struct:controllerEvent
+writeControllerState	ctrlrnix.cpp	/^void Ctrlr::writeControllerState()$/;"	f	class:Ctrlr
+~Ctrlr	ctrlrnix.cpp	/^Ctrlr::~Ctrlr()$/;"	f	class:Ctrlr
