@@ -1,0 +1,6 @@
+[package]
+name = "kami-ui"
+version = "0.1.0"
+authors = ["Ryan Reyes <ryan.david.reyes@gmail.com>"]
+
+[dependencies]
