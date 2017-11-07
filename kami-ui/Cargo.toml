@@ -4,3 +4,10 @@ version = "0.1.0"
 authors = ["Ryan Reyes <ryan.david.reyes@gmail.com>"]
 
 [dependencies]
+nuklear-rust = "0.3.2"
+nuklear-backend-gfx = "0.6.0"
+gfx_device_gl = "~0.14"
+gfx_window_glutin = "~0.17"
+gfx = "~0.16"
+glutin = "~0.9"
+image = "~0.12"
