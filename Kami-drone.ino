@@ -3,6 +3,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "ring_buffer.h"
+#include "teensy_accel.h"
+#include "teensy_gyro.h"
 
 #define OLED_RESET 15
 #define I2C_SDA 34
@@ -18,8 +20,8 @@ Adafruit_SSD1306 display(OLED_RESET);
 #define DELTAY 2
 
 
-#define LOGO16_GLCD_HEIGHT 16 
-#define LOGO16_GLCD_WIDTH  16 
+#define LOGO16_GLCD_HEIGHT 16
+#define LOGO16_GLCD_WIDTH  16
 static const unsigned char PROGMEM logo16_glcd_bmp[] =
 { B00000000, B11000000,
   B00000001, B11000000,
@@ -42,7 +44,15 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 
+typedef struct kami_drone_s {
+  accel_data_t accel_data;
+  gyro_data_t gyro_data;
+} kami_drone_t;
+
+volatile kami_drone_t kami_drone;
+
 void setup() {
+  //-----------------
   Serial.begin(9600);
   Wire.setSDA(I2C_SDA);
   Wire.setSCL(I2C_SCL);
@@ -50,113 +60,45 @@ void setup() {
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
   // init done
-
-  // Show image buffer on the display hardware.
-  // Since the buffer is intialized with an Adafruit splashscreen
-  // internally, this will display the splashscreen.
-  display.display();
-  delay(2000);
-
-  // Clear the buffer.
-  display.clearDisplay();
-
-  // draw a single pixel
-  display.drawPixel(10, 10, WHITE);
-  // Show the display buffer on the hardware.
-  // NOTE: You _must_ call display after making any drawing commands
-  // to make them visible on the display hardware!
-  display.display();
-  delay(2000);
-  display.clearDisplay();
-
-  // draw many lines
-  testdrawline();
-  display.display();
-  delay(2000);
-  display.clearDisplay();
-
-  // draw rectangles
-  testdrawrect();
-  display.display();
-  delay(2000);
-  display.clearDisplay();
-
-  // draw multiple rectangles
-  testfillrect();
-  display.display();
-  delay(2000);
-  display.clearDisplay();
-
-  // draw mulitple circles
-  testdrawcircle();
-  display.display();
-  delay(2000);
-  display.clearDisplay();
-
-  // draw a white circle, 10 pixel radius
-  display.fillCircle(display.width()/2, display.height()/2, 10, WHITE);
-  display.display();
-  delay(2000);
-  display.clearDisplay();
-
-  testdrawroundrect();
-  delay(2000);
-  display.clearDisplay();
-
-  testfillroundrect();
-  delay(2000);
-  display.clearDisplay();
-
-  testdrawtriangle();
-  delay(2000);
-  display.clearDisplay();
-
-  testfilltriangle();
-  delay(2000);
-  display.clearDisplay();
-
-  // draw the first ~12 characters in the font
-  testdrawchar();
-  display.display();
-  delay(2000);
-  display.clearDisplay();
-
-  // draw scrolling text
-  testscrolltext();
-  delay(2000);
-  display.clearDisplay();
-
-  // text display tests
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  display.println("Hello, world!");
-  display.setTextColor(BLACK, WHITE); // 'inverted' text
-  display.println(3.141592);
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-  display.print("0x"); display.println(0xDEADBEEF, HEX);
-  display.display();
-  delay(2000);
-  display.clearDisplay();
-
-  // miniature bitmap display
-  display.drawBitmap(30, 16,  logo16_glcd_bmp, 16, 16, 1);
-  display.display();
-  delay(1);
-
-  // invert the display
-  display.invertDisplay(true);
-  delay(1000);
-  display.invertDisplay(false);
-  delay(1000);
-  display.clearDisplay();
-
-  // draw a bitmap icon and 'animate' movement
-  testdrawbitmap(logo16_glcd_bmp, LOGO16_GLCD_HEIGHT, LOGO16_GLCD_WIDTH);
+  //-----------------
+  initAccel();
+  initGyro();
+  calibrateAccel(&kami_drone.accel_data);
+  calibrateGyro(&kami_drone.gyro_data);
 }
 
 void loop() {
+  static int i = 0;
+  digitalWriteFast(35, HIGH);
+  readAccel(&kami_drone.accel_data);
+  readGyro(&kami_drone.gyro_data);
+  digitalWriteFast(35, LOW);
+
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0,0);
+  display.println(kami_drone.accel_data.raw_z);
+  display.setCursor(0,10);
+  display.println(kami_drone.gyro_data.raw_roll_dot);
+  display.setCursor(0,20);
+  display.println(i++, HEX);
+  display.display();
+  display.clearDisplay();
+  delay(5);
+}
+
+extern "C" int main(void) {
+  pinMode(13, OUTPUT);
+  pinMode(35, OUTPUT);
+  digitalWriteFast(13, HIGH);
+  delay(500);
+  digitalWriteFast(13, LOW);
+  delay(500);
+  setup();
+  while (1) {
+    loop();
+    yield();
+  }
 }
 
 void testdrawbitmap(const uint8_t *bitmap, uint8_t w, uint8_t h) {
