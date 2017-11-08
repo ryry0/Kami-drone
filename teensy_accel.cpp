@@ -8,7 +8,7 @@
  */
 /**************************************************************************/
 
-void initAccel(void) {
+void accel_init(void) {
 
   //set data format
   Wire.beginTransmission(ADXL345);
@@ -31,7 +31,7 @@ void initAccel(void) {
  */
 /**************************************************************************/
 
-void readAccel(volatile accel_data_t *accel_data) {
+void accel_read(volatile accel_data_t *accel_data) {
   uint8_t I2CSlaveBuffer[6] = {0};
 
   Wire.beginTransmission(ADXL345);
@@ -61,7 +61,7 @@ void readAccel(volatile accel_data_t *accel_data) {
  */
 /**************************************************************************/
 
-void calibrateAccel(volatile accel_data_t *accel_data) {
+void accel_calibrate(volatile accel_data_t *accel_data) {
   int16_t x_sum = 0, y_sum = 0, z_sum = 0;
 
   accel_data->x_off = 0;
@@ -69,7 +69,7 @@ void calibrateAccel(volatile accel_data_t *accel_data) {
   accel_data->z_off = 0;
 
   for (uint8_t i = 0; i < CALIB_SAMPLES; i++) {
-    readAccel(accel_data);
+    accel_read(accel_data);
 
     x_sum += accel_data->raw_x;
     y_sum += accel_data->raw_y;

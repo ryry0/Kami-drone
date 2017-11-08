@@ -7,7 +7,7 @@
  * INIT GYRO
  */
 /**************************************************************************/
-void initGyro(void) {
+void gyro_init(void) {
   //set pwr_mgm to zero
   Wire.beginTransmission(ITG3205);
   Wire.write(PWR_MGM);
@@ -39,7 +39,7 @@ void initGyro(void) {
  * CALIBRATE GYRO
  */
 /**************************************************************************/
-void calibrateGyro(volatile gyro_data_t *gyro_data) {
+void gyro_calibrate(volatile gyro_data_t *gyro_data) {
   int16_t roll_dot_sum = 0, pitch_dot_sum = 0, yaw_dot_sum = 0;
 
   gyro_data->roll_dot_off = 0;
@@ -47,7 +47,7 @@ void calibrateGyro(volatile gyro_data_t *gyro_data) {
   gyro_data->yaw_dot_off = 0;
 
   for (uint8_t i = 0; i < CALIB_SAMPLES; i++) {
-    readGyro(gyro_data);
+    gyro_read(gyro_data);
 
     roll_dot_sum += gyro_data->raw_roll_dot;
     pitch_dot_sum += gyro_data->raw_pitch_dot;
@@ -65,7 +65,7 @@ void calibrateGyro(volatile gyro_data_t *gyro_data) {
  * READ GYRO
  */
 /**************************************************************************/
-void readGyro(volatile gyro_data_t *gyro_data) {
+void gyro_read(volatile gyro_data_t *gyro_data) {
   uint8_t I2CSlaveBuffer[6] = {0};
   Wire.beginTransmission( ITG3205);
   Wire.write( GYRO_XOUT_H);

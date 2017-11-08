@@ -30,8 +30,8 @@ typedef struct gyro_data_t {
   int16_t raw_yaw_dot;
 } gyro_data_t;
 
-void initGyro(void);
-void readGyro(volatile gyro_data_t *gyro_data);
-void calibrateGyro(volatile gyro_data_t *gyro_data);
+void gyro_init(void);
+void gyro_read(volatile gyro_data_t *gyro_data);
+void gyro_calibrate(volatile gyro_data_t *gyro_data);
 
 #endif

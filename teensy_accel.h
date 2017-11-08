@@ -34,8 +34,13 @@ typedef struct accel_data_t {
   int16_t raw_z;
 } accel_data_t;
 
-void initAccel(void);
-void readAccel(volatile accel_data_t *accel_data);
-void calibrateAccel(volatile accel_data_t *accel_data);
+void accel_init(void);
+void accel_read(volatile accel_data_t *accel_data);
+void accel_calibrate(volatile accel_data_t *accel_data);
 
+inline void accel_convertToGs(volatile accel_data_t *accel_data) {
+  accel_data->xg = accel_data->raw_x * ACCEL_SCALING;
+  accel_data->yg = accel_data->raw_y * ACCEL_SCALING;
+  accel_data->zg = accel_data->raw_z * ACCEL_SCALING;
+}
 #endif
