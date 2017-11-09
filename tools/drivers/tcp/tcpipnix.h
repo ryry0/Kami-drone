@@ -1,7 +1,7 @@
 /*
   Author:Ryan - David Reyes
 */
-#ifndef TCPIPNIX_H_ 
+#ifndef TCPIPNIX_H_
 #define TCPIPNIX_H_
 #include <unistd.h>
 
@@ -23,12 +23,12 @@ class TCP
     unsigned int acceptConnection();
 
     int sendData(unsigned int writeTo, char * data, const int len);
-    int receiveData(unsigned int readFrom, 
-        char * data, 
+    int receiveData(unsigned int readFrom,
+        char * data,
         const int len);
-      
+
     /*
-      The folowing functions send and receive data 
+      The folowing functions send and receive data
       framed with a 4 byte packet that specifies
       the size of that data
     */

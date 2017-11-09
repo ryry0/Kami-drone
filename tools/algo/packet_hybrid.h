@@ -15,6 +15,8 @@ typedef enum pkt_type_e {
   PKT_GET_PARAMS,
   PKT_SET_STATE,
   PKT_CALIBRATE_KNEE,
+  PKT_CALIBRATE_LHIP,
+  PKT_CALIBRATE_RHIP,
   PKT_DATA_START  = 's',
   PKT_DATA_STOP   = 'n',
   PKT_EN_MOTOR    = 'e',

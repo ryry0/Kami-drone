@@ -42,20 +42,20 @@ bool TCP::connectToHost(const int portNo, const char* IPAddress)
 
   //fill out info needed to initialize a socket
   //address internet
-  target.sin_family = AF_INET;      
+  target.sin_family = AF_INET;
 
   //port to conect on (host to network)
-  target.sin_port = htons(portNo);    
+  target.sin_port = htons(portNo);
   target.sin_addr.s_addr = inet_addr(IPAddress);  //target ip
 
   //create the socket
-  servSock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP); 
+  servSock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (servSock == INVALID_SOCKET)
     return false;       //couldn't create the socket
 
 
-  if ( connect( servSock, 
-      (struct sockaddr*)&target, 
+  if ( connect( servSock,
+      (struct sockaddr*)&target,
       sizeof(target)) == SOCKET_ERROR)
     return false;       //couldnt connect
 
@@ -83,11 +83,11 @@ bool TCP::listenToPort(const int portNo)
   if (servSock == INVALID_SOCKET)
     return false;
 
-  if (bind( servSock, 
-      (struct sockaddr*) &addr, 
+  if (bind( servSock,
+      (struct sockaddr*) &addr,
       sizeof(addr)) == SOCKET_ERROR)
 
-    return false; 
+    return false;
   // will happen if you try to bind to same socket multiple times
 
   //listen to the port with max connections possible
@@ -146,14 +146,14 @@ int TCP::receiveFramedData(unsigned int readFrom, char * data)
   //read if and while not enough data received, until all data arrives
   while (currentRead > 0 && totalRead < 4)
   {
-    currentRead = this -> receiveData(  readFrom, 
-              (lenBuff + totalRead), 
+    currentRead = this -> receiveData(  readFrom,
+              (lenBuff + totalRead),
               (4 - totalRead));
     totalRead += currentRead;
   }
 
   //dereferenced casted int pointer to char array
-  lenPrefix = *(int *) lenBuff; 
+  lenPrefix = *(int *) lenBuff;
   //reset current and total read
   currentRead = 0;
   totalRead = 0;
@@ -166,8 +166,8 @@ int TCP::receiveFramedData(unsigned int readFrom, char * data)
   //read if and while not enough data received, until all data arrives
   while (currentRead > 0 && totalRead < lenPrefix)
   {
-    currentRead = this -> receiveData(  readFrom, 
-              (data + totalRead), 
+    currentRead = this -> receiveData(  readFrom,
+              (data + totalRead),
               (lenPrefix - totalRead));
     totalRead += currentRead;
   }
