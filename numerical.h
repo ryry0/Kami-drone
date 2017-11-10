@@ -8,6 +8,9 @@
 #define NUMERICAL_H_
 #include "ring_buffer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * \brief This macro forces an amount to be constrained between low and high
  * values.
@@ -148,4 +151,8 @@ float nm_expMovAvg(float constant, float current_average,
 inline float nm_removeDC(float constant, float y_prev, float x, float x_prev) {
   return x - x_prev + constant*y_prev;
 }
+
+#ifdef __cplusplus
+}
+#endif
 #endif
