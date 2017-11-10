@@ -1,0 +1,80 @@
+# depslib dependency file v1.0
+1501095772 source:c:\users\hybrid\desktop\hybrid-frontend\glew.c
+	<GL/glew.h>
+	<GL/osmesa.h>
+	<GL/eglew.h>
+	<GL/wglew.h>
+	<GL/glxew.h>
+	<stddef.h>
+	<dlfcn.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdlib.h>
+	<string.h>
+	<AvailabilityMacros.h>
+	<dlfcn.h>
+	<mach-o/dyld.h>
+
+1501100706 source:c:\users\hybrid\desktop\hybrid-frontend\mainsdl.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<stdarg.h>
+	<string.h>
+	<math.h>
+	<assert.h>
+	<math.h>
+	<limits.h>
+	<time.h>
+	<GL/glew.h>
+	<SDL2/SDL.h>
+	<SDL2/SDL_opengl.h>
+	<mvu.h>
+	<nuklear.h>
+	<nuklear_sdl_gl3.h>
+
+1501097627 source:c:\users\hybrid\desktop\hybrid-frontend\mvu.c
+	<mvu.h>
+	<packet_hybrid.h>
+	<ring_buffer.h>
+	<record.h>
+	<serial.h>
+	<string.h>
+	<nk_utility.h>
+	<stdarg.h>
+	<linux/limits.h>
+	<limits.h>
+
+1501095772 source:c:\users\hybrid\desktop\hybrid-frontend\nk_utility.c
+	<nk_utility.h>
+	<stdlib.h>
+	<stdio.h>
+
+1501095772 source:c:\users\hybrid\desktop\hybrid-frontend\record.c
+	<record.h>
+	<time.h>
+	<packet_hybrid.h>
+	<ctype.h>
+
+1501095772 source:c:\users\hybrid\desktop\hybrid-frontend\tools\algo\cobs.c
+	<cobs.h>
+
+1501095772 source:c:\users\hybrid\desktop\hybrid-frontend\tools\algo\numerical.c
+	<numerical.h>
+	<math.h>
+
+1501095772 source:c:\users\hybrid\desktop\hybrid-frontend\tools\algo\packet.c
+	<packet.h>
+	<string.h>
+	<cobs.h>
+
+1501095772 source:c:\users\hybrid\desktop\hybrid-frontend\tools\data_structs\ring_buffer.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<ring_buffer.h>
+
+1501095772 source:c:\users\hybrid\desktop\hybrid-frontend\tools\drivers\serial\serialwin.c
+	<serial.h>
+	<windows.h>
+

@@ -1,0 +1,69 @@
+SOURCE_EXT=c
+OBJ_EXT=o
+HEAD_EXT=h
+OBJ_HEAD_EXT=gch
+LIB_DIR=..
+CC=gcc
+CFLAGS=-c -I. -std=c11 -I$(LIB_DIR)
+LDFLAGS=
+DFLAGS=-DDEBUG -ggdb -g3 -Wall
+RFLAGS=-O2
+DEFAULT_DEBUG=y
+
+EXECUTABLE=write_serial.x
+EXECUTABLE2=read_serial.x
+
+SOURCES=$(LIB_DIR)/serialnix.c $(LIB_DIR)/serialwin.c $(LIB_DIR)/packet.c write_serial.c
+OBJECTS=$(SOURCES:.$(SOURCE_EXT)=.$(OBJ_EXT))
+SOURCES2=$(LIB_DIR)/serialnix.c  $(LIB_DIR)/serialwin.c $(LIB_DIR)/packet.c read_serial.c
+OBJECTS2=$(SOURCES2:.$(SOURCE_EXT)=.$(OBJ_EXT))
+
+.PHONY: clean cleanall run test debug
+
+ifeq ($(DEFAULT_DEBUG),y)
+ALL_TARGET=debug
+else
+ALL_TARGET=release
+endif
+
+all: $(EXECUTABLE) $(EXECUTABLE2)
+
+debug: CFLAGS += $(DFLAGS)
+debug: $(SOURCES) $(EXECUTABLE)
+
+release: CFLAGS += $(RFLAGS)
+release: $(SOURCES) $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+
+$(EXECUTABLE2): $(OBJECTS2)
+	$(CC) $(LDFLAGS) $(OBJECTS2) -o $@
+
+%.$(OBJ_EXT): %.$(SOURCE_EXT) $(wildcard *.$(HEAD_EXT))
+	$(CC) $(CFLAGS) $< -o $@
+
+
+cleanall: clean
+	rm -f $(EXECUTABLE)
+
+proper: clean cleanall
+
+re: proper all
+
+redo: proper debug
+
+clean:
+	rm -f $(wildcard *.$(OBJ_EXT)) $(wildcard *.$(OBJ_HEAD_EXT))
+
+tags:
+	ctags -R --c++-kinds=+p --fields=+iaS --extra=+q
+
+run: all
+	./$(EXECUTABLE)
+
+test: all
+	gdb -tui -q $(EXECUTABLE) -tty=/dev/pts/2
+
+grind: all
+	valgrind --leak-check=yes ./$(EXECUTABLE)

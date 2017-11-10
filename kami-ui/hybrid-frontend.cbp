@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="hybrid-frontend" />
+		<Option makefile="makefile" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/hybrid-frontend" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-I. -I./tools/algo/ -I./tools/data_structs/" />
+					<Add option="-I.\SDL2-devel-2.0.5-mingw\SDL2-2.0.5\i686-w64-mingw32\include" />
+					<Add option="-I./tools/drivers/serial" />
+					<Add option="--std=c11" />
+					<Add option="-O1" />
+					<Add option="-DGLEW_STATIC" />
+					<Add directory="SDL2-devel-2.0.5-mingw/SDL2-2.0.5/i686-w64-mingw32/include/SDL2" />
+				</Compiler>
+				<Linker>
+					<Add option="-lmingw32" />
+					<Add option="-lSDL2main" />
+					<Add option="-lSDL2" />
+					<Add option="-lm" />
+					<Add option="-lopengl32" />
+					<Add option="-lglu32" />
+					<Add directory="SDL2-devel-2.0.5-mingw/SDL2-2.0.5/i686-w64-mingw32/lib" />
+					<Add directory="../hybrid-frontend" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/hybrid-frontend" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-I. -I./tools/algo/ -I./tools/data_structs/" />
+					<Add option="-I.\SDL2-devel-2.0.5-mingw\SDL2-2.0.5\i686-w64-mingw32\include" />
+					<Add option="-I./tools/drivers/serial" />
+					<Add option="--std=c11" />
+					<Add option="-DGLEW_STATIC" />
+					<Add directory="SDL2-devel-2.0.5-mingw/SDL2-2.0.5/i686-w64-mingw32/include/SDL2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-lmingw32" />
+					<Add option="-lSDL2main" />
+					<Add option="-lSDL2" />
+					<Add option="-lm" />
+					<Add option="-lopengl32" />
+					<Add option="-lglu32" />
+					<Add directory="SDL2-devel-2.0.5-mingw/SDL2-2.0.5/i686-w64-mingw32/lib" />
+					<Add directory="../hybrid-frontend" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="GL/glew.h" />
+		<Unit filename="glew.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="mainsdl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="mvu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="mvu.h" />
+		<Unit filename="nk_utility.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="nk_utility.h" />
+		<Unit filename="record.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="record.h" />
+		<Unit filename="tools/algo/cobs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tools/algo/cobs.h" />
+		<Unit filename="tools/algo/numerical.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tools/algo/numerical.h" />
+		<Unit filename="tools/algo/packet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tools/algo/packet.h" />
+		<Unit filename="tools/algo/packet_hybrid.h" />
+		<Unit filename="tools/data_structs/ring_buffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tools/data_structs/ring_buffer.h" />
+		<Unit filename="tools/drivers/serial/serial.h" />
+		<Unit filename="tools/drivers/serial/serialwin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
