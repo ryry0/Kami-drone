@@ -1,42 +1,45 @@
 /*
   Author:Ryan - David Reyes
 */
+
+#include <tcpip.h>
+#ifdef __linux__
+
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdio.h>
 
-#include "tcpipnix.h"
+
 const int INVALID_SOCKET = -1;
 const int SOCKET_ERROR = -1;
 
-/*
-const int SCK_VERSION1 = 0x0101;
-const int SCK_VERSION2 = 0x0202;
 
-#define SOCK_STREAM 1
-#define SOCK_DGRAM 2
-#define SOCK_RAW 3
+struct tcp_connection_s {
+  ssize_t socket;
+  ssize_t port;
+};
 
-#define AF_INET 2
-
-#define IPPROTO_TCP 6
-*/
-
-TCP::TCP()
+tcp_connection_t tcp_create()
 {
-    //ctor
+    return malloc(sizeof(struct tcp_connection_s));
 }
 
-TCP::~TCP()
+void tcp_destroy(tcp_connection_t tcp_conn)
 {
-  if (servSock)
-    close(servSock);
+  if (tcp_conn) {
+    if (tcp_conn->socket)
+      close(tcp_conn->socket);
+
+    free(tcp_conn);
+  }
   //dtor
 }
 
-bool TCP::connectToHost(const int portNo, const char* IPAddress)
+bool tcp_connectToHost(tcp_connection_t tcp_conn, int portNo, const char* IPAddress)
 {
   struct sockaddr_in target;
 
@@ -49,22 +52,27 @@ bool TCP::connectToHost(const int portNo, const char* IPAddress)
   target.sin_addr.s_addr = inet_addr(IPAddress);  //target ip
 
   //create the socket
-  servSock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (servSock == INVALID_SOCKET)
-    return false;       //couldn't create the socket
+  tcp_conn->socket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  tcp_conn->port = portNo;
+  if (tcp_conn->socket == INVALID_SOCKET) {
+    printf("couldn't create the socket");
+    return false;
+  }
 
 
-  if ( connect( servSock,
+  if ( connect( tcp_conn->socket,
       (struct sockaddr*)&target,
-      sizeof(target)) == SOCKET_ERROR)
-    return false;       //couldnt connect
+      sizeof(target)) == SOCKET_ERROR) {
+    printf("couldnt connect");
+    return false;
+  }
 
   else
     return true;
 
 }
 
-bool TCP::listenToPort(const int portNo)
+bool tcp_listenToPort(tcp_connection_t tcp_conn, int portNo)
 {
   struct sockaddr_in addr;
 
@@ -78,12 +86,13 @@ bool TCP::listenToPort(const int portNo)
   //or just pass inet_addr("0.0.0.0")
   //specify a specific ip address to watch for only that address
 
-  servSock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  tcp_conn->socket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  tcp_conn->port = portNo;
 
-  if (servSock == INVALID_SOCKET)
+  if (tcp_conn->socket == INVALID_SOCKET)
     return false;
 
-  if (bind( servSock,
+  if (bind( tcp_conn->socket,
       (struct sockaddr*) &addr,
       sizeof(addr)) == SOCKET_ERROR)
 
@@ -95,30 +104,35 @@ bool TCP::listenToPort(const int portNo)
   // u_long iMode=1;
   //ioctlsocket(s,FIONBIO,&iMode);
 
-  listen(servSock, SOMAXCONN);
+  listen(tcp_conn->socket, SOMAXCONN);
   return true;
 }
 
-unsigned int TCP::acceptConnection()
+bool tcp_acceptConnection(const tcp_connection_t tcp_conn, tcp_connection_t
+    tcp_accepted)
 {
   unsigned int TempSock = SOCKET_ERROR;
-  TempSock = accept(servSock, NULL, NULL);
-  return TempSock;
+  TempSock = accept(tcp_conn->socket, NULL, NULL);
+  if (TempSock) {
+    tcp_accepted->socket = TempSock;
+    return true;
+  }
+  return false;
 }
 
-int TCP::sendData(unsigned int writeTo, char * data, const int len)
+int tcp_sendData(const tcp_connection_t tcp_conn, const uint8_t *data, const int len)
 {
-  return send(writeTo, data, len, 0);
+  return send(tcp_conn->socket, data, len, 0);
 }
 
-int TCP::receiveData(unsigned int readFrom, char * buffer, const int len)
+int tcp_receiveData(const tcp_connection_t tcp_conn, uint8_t *buffer, const int len)
 {
-  return recv(readFrom, buffer, len, 0);
+  return recv(tcp_conn->socket, buffer, len, 0);
 }
 
 //Sends a 4 byte packed integer. Sending one byte at a time
 //is more reliable than sending an int in one shot.
-int TCP::sendFramedData(unsigned int writeTo, char* data, const int len)
+int tcp_sendFramedData(const tcp_connection_t tcp_conn, const uint8_t *data, const int len)
 {
   char lenBuff[4] = {0};
 
@@ -127,26 +141,25 @@ int TCP::sendFramedData(unsigned int writeTo, char* data, const int len)
   lenBuff[2] = (unsigned char) (len >> 16);
   lenBuff[3] = (unsigned char) (len >> 24);
 
-  this->sendData(writeTo, lenBuff, 4);
-  return this->sendData(writeTo, data, len);
+  tcp_sendData(tcp_conn, lenBuff, 4);
+  return tcp_sendData(tcp_conn, data, len);
 }
 
 
-int TCP::receiveFramedData(unsigned int readFrom, char * data)
+int tcp_receiveFramedData(const tcp_connection_t tcp_conn, uint8_t *data)
 {
   char lenBuff[4];
-  char * dataBuff;
   int lenPrefix;
   int totalRead;
   int currentRead;
 
   //priming read:
-  currentRead = totalRead = this->receiveData(readFrom, lenBuff, 4);
+  currentRead = totalRead = tcp_receiveData(tcp_conn, lenBuff, 4);
 
   //read if and while not enough data received, until all data arrives
   while (currentRead > 0 && totalRead < 4)
   {
-    currentRead = this -> receiveData(  readFrom,
+    currentRead = tcp_receiveData(tcp_conn,
               (lenBuff + totalRead),
               (4 - totalRead));
     totalRead += currentRead;
@@ -158,22 +171,21 @@ int TCP::receiveFramedData(unsigned int readFrom, char * data)
   currentRead = 0;
   totalRead = 0;
 
-  //dataBuff = new char [lenPrefix];
 
   //priming read:
-  currentRead = totalRead = this->receiveData(readFrom, data, lenPrefix);
+  currentRead = totalRead = tcp_receiveData(tcp_conn, data, lenPrefix);
 
   //read if and while not enough data received, until all data arrives
   while (currentRead > 0 && totalRead < lenPrefix)
   {
-    currentRead = this -> receiveData(  readFrom,
+    currentRead = tcp_receiveData(tcp_conn,
               (data + totalRead),
               (lenPrefix - totalRead));
     totalRead += currentRead;
   }
 
 
-  //delete [] dataBuff;
   //dtor
   return totalRead;
 }
+#endif

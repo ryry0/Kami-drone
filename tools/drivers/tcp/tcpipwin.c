@@ -1,6 +1,19 @@
-#include "tcpipwin.h"
+#include <tcpip.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <windows.h>
+#include <stdlib.h>
+
+#define WIN32_LEAN_AND_MEAN
+
 const int SCK_VERSION1 = 0x0101;
 const int SCK_VERSION2 = 0x0202;
+
+struct tcp_connection_s {
+  SOCKET socket;
+  ssize_t port;
+};
 
 #define SOCK_STREAM 1
 #define SOCK_DGRAM 2
@@ -10,20 +23,22 @@ const int SCK_VERSION2 = 0x0202;
 
 #define IPPROTO_TCP 6
 
-TCP::TCP()
+tcp_connection_t tcp_create()
 {
-    //ctor
+    return malloc(sizeof(struct tcp_connection_s));
 }
 
-TCP::~TCP()
+void tcp_destroy(tcp_connection_t tcp_conn)
 {
-    if (servSock)
-        closesocket(servSock);
+  if (tcp_conn) {
+    if (tcp_conn->socket)
+        closesocket(tcp_conn->socket);
     WSACleanup();
     //dtor
+  }
 }
 
-bool TCP::connectToHost(const int PortNo, const char* IPAddress)
+bool tcp_connectToHost(tcp_connection_t tcp_conn, int PortNo, const char* IPAddress)
 {
     //start up winsock
     WSADATA wsadata;
@@ -45,19 +60,19 @@ bool TCP::connectToHost(const int PortNo, const char* IPAddress)
     target.sin_port = htons(PortNo); 		//port to conect on (host to network)
     target.sin_addr.s_addr = inet_addr(IPAddress); 	//target ip
 
-    servSock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP); //create the socket
-    if (servSock == INVALID_SOCKET)
+    tcp_conn->socket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP); //create the socket
+    if (tcp_conn->socket == INVALID_SOCKET)
         return false; 			//couldn't create the socket
 
 
-    if (connect(servSock, (SOCKADDR *)&target, sizeof(target)) == SOCKET_ERROR)
+    if (connect(tcp_conn->socket, (SOCKADDR *)&target, sizeof(target)) == SOCKET_ERROR)
         return false; 			//couldnt connect
     else
         return true;
 
 }
 
-int TCP::listenToPort(const int PortNo)
+bool tcp_listenToPort(tcp_connection_t tcp_conn, const int portNo)
 {
     WSADATA wsadata;
     int error = WSAStartup(SCK_VERSION2, &wsadata);
@@ -75,7 +90,7 @@ int TCP::listenToPort(const int PortNo)
 
     addr.sin_family = AF_INET;
 
-    addr.sin_port = htons(PortNo);
+    addr.sin_port = htons(portNo);
     addr.sin_addr.s_addr = htonl (INADDR_ANY);
     //assign port to this socket
 
@@ -83,12 +98,13 @@ int TCP::listenToPort(const int PortNo)
     //or just pass inet_addr("0.0.0.0")
     //specify a specific ip address to watch for only that address
 
-    servSock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    tcp_conn->socket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    tcp_conn->port = portNo;
 
-    if (servSock == INVALID_SOCKET)
+    if (tcp_conn->socket == INVALID_SOCKET)
         return false;
 
-    if (bind(servSock, (LPSOCKADDR)&addr, sizeof(addr)) == SOCKET_ERROR)
+    if (bind(tcp_conn->socket, (LPSOCKADDR)&addr, sizeof(addr)) == SOCKET_ERROR)
         return false; // will happen if you try to bind to same socket multiple times
 
     //listen to the port with max connections possible
@@ -96,31 +112,36 @@ int TCP::listenToPort(const int PortNo)
     // u_long iMode=1;
     //ioctlsocket(s,FIONBIO,&iMode);
 
-    listen(servSock, SOMAXCONN);
+    listen(tcp_conn->socket, SOMAXCONN);
     return true;
 }
 
-SOCKET TCP::acceptConnection()
+bool tcp_acceptConnection(const tcp_connection_t tcp_conn, tcp_connection_t
+    tcp_accepted)
 {
     SOCKET TempSock = SOCKET_ERROR;
-    TempSock = accept(servSock, NULL, NULL);
-    return TempSock;
+    TempSock = accept(tcp_conn->socket, NULL, NULL);
+    if(TempSock) {
+      tcp_accepted->socket = TempSock;
+      return true;
+    }
+    return false;
 }
 
-int TCP::sendData(SOCKET writeTo, char * data, const int len)
+int tcp_sendData(const tcp_connection_t tcp_conn, const uint8_t *data, const int len)
 {
-    return send(writeTo, data, len, 0);
+    return send(tcp_conn->socket, data, len, 0);
 }
 
-int TCP::receiveData(SOCKET readFrom, char * buffer, const int len)
+int tcp_receiveData(const tcp_connection_t tcp_conn, uint8_t *buffer, const int len)
 {
-    return recv(readFrom, buffer, len, 0);
+    return recv(tcp_conn->socket, buffer, len, 0);
 }
 
 //untested!
 //Sends a 4 byte packed integer. Sending one byte at a time
 //is more reliable than sending an int in one shot.
-int TCP::sendFramedData(SOCKET writeTo, char* data, const int len)
+int tcp_sendFramedData(const tcp_connection_t tcp_conn, const uint8_t* data, const int len)
 {
     char lenBuff[4] = {0};
 
@@ -129,26 +150,25 @@ int TCP::sendFramedData(SOCKET writeTo, char* data, const int len)
     lenBuff[2] = (unsigned char) (len >> 16);
     lenBuff[3] = (unsigned char) (len >> 24);
 
-    this->sendData(writeTo, lenBuff, 4);
-    return this->sendData(writeTo, data, len);
+    tcp_sendData(tcp_conn, lenBuff, 4);
+    return tcp_sendData(tcp_conn, data, len);
 }
 
 
-int TCP::receiveFramedData(SOCKET readFrom, char * data)
+int tcp_receiveFramedData(const tcp_connection_t tcp_conn, uint8_t *data)
 {
     char lenBuff[4];
-    char * dataBuff;
     int lenPrefix;
     int totalRead;
     int currentRead;
 
     //priming read:
-    currentRead = totalRead = this->receiveData(readFrom, lenBuff, 4);
+    currentRead = totalRead = tcp_receiveData(tcp_conn, lenBuff, 4);
 
     //read if and while not enough data received, until all data arrives
     while (currentRead > 0 && totalRead < 4)
     {
-        currentRead = this -> receiveData(readFrom, (lenBuff + totalRead), (4 - totalRead));
+        currentRead = tcp_receiveData(tcp_conn, (lenBuff + totalRead), (4 - totalRead));
         totalRead += currentRead;
     }
 
@@ -158,19 +178,18 @@ int TCP::receiveFramedData(SOCKET readFrom, char * data)
     currentRead = 0;
     totalRead = 0;
 
-    //dataBuff = new char [lenPrefix];
 
     //priming read:
-    currentRead = totalRead = this->receiveData(readFrom, data, lenPrefix);
+    currentRead = totalRead = tcp_receiveData(tcp_conn, data, lenPrefix);
 
     //read if and while not enough data received, until all data arrives
     while (currentRead > 0 && totalRead < lenPrefix)
     {
-        currentRead = this -> receiveData(readFrom, (data + totalRead), (lenPrefix - totalRead));
+        currentRead = tcp_receiveData(tcp_conn, (data + totalRead), (lenPrefix - totalRead));
         totalRead += currentRead;
     }
 
 
-    //delete [] dataBuff;
     return totalRead;
 }
+#endif
