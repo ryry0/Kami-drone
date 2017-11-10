@@ -15,7 +15,6 @@
 
 
 const int INVALID_SOCKET = -1;
-const int SOCKET_ERROR = -1;
 
 
 struct tcp_connection_s {
@@ -25,7 +24,9 @@ struct tcp_connection_s {
 
 tcp_connection_t tcp_create()
 {
-    return malloc(sizeof(struct tcp_connection_s));
+  tcp_connection_t temp = malloc(sizeof(struct tcp_connection_s));
+  temp->socket = SOCKET_ERROR;
+  return temp;
 }
 
 void tcp_destroy(tcp_connection_t tcp_conn)
@@ -188,4 +189,15 @@ int tcp_receiveFramedData(const tcp_connection_t tcp_conn, uint8_t *data)
   //dtor
   return totalRead;
 }
+
+int tcp_getSocket(tcp_connection_t tcp_conn) {
+  return tcp_conn->socket;
+}
+
+int tcp_closeSocket(tcp_connection_t tcp_conn) {
+  int retval = close(tcp_conn->socket);
+  tcp_conn->socket = SOCKET_ERROR;
+  return retval;
+}
+
 #endif

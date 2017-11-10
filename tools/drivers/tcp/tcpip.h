@@ -17,6 +17,8 @@
 
 typedef struct tcp_connection_s* tcp_connection_t;
 
+#define SOCKET_ERROR -1
+
 tcp_connection_t tcp_create();
 void tcp_destroy(tcp_connection_t tcp_conn);
 
