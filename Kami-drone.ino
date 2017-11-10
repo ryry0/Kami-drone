@@ -5,6 +5,7 @@
 #include "ring_buffer.h"
 #include "teensy_accel.h"
 #include "teensy_gyro.h"
+#include "numerical.h"
 
 #define OLED_RESET 15
 #define I2C_SDA 34
@@ -19,6 +20,14 @@ Adafruit_SSD1306 display(OLED_RESET);
 #define YPOS 1
 #define DELTAY 2
 
+#define TEST_PIN1 35
+#define TEST_PIN2 36
+
+#define FIL_ALPHA 0.995
+#define DELTA_TIME 0.002
+#define LOOP_CLOSURE_US 2000
+
+#define I2C_FASTMODE 400000
 
 #define LOGO16_GLCD_HEIGHT 16
 #define LOGO16_GLCD_WIDTH  16
@@ -44,9 +53,13 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 
+IntervalTimer control_timer;
+
 typedef struct kami_drone_s {
   accel_data_t accel_data;
   gyro_data_t gyro_data;
+  float roll;
+  float pitch;
 } kami_drone_t;
 
 volatile kami_drone_t kami_drone;
@@ -56,6 +69,11 @@ void setup() {
   Serial.begin(9600);
   Wire.setSDA(I2C_SDA);
   Wire.setSCL(I2C_SCL);
+  Wire.begin();
+  Wire.setClock(I2C_FASTMODE);
+
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
 
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
@@ -65,30 +83,47 @@ void setup() {
   gyro_init();
   accel_calibrate(&kami_drone.accel_data);
   gyro_calibrate(&kami_drone.gyro_data);
+  control_timer.begin(controlLoop, LOOP_CLOSURE_US);
+}
+
+void controlLoop() {
+  static float roll = 0;
+  digitalWriteFast(TEST_PIN1, HIGH);
+  digitalWriteFast(TEST_PIN2, HIGH);
+  //for (volatile size_t i = 0; i < 1000; ++i) { }
+  digitalWriteFast(TEST_PIN1, LOW);
+
+  accel_convertToGs(&kami_drone.accel_data);
+  accel_calcAngle(&kami_drone.accel_data);
+
+  kami_drone.roll = nm_expMovAvg(FIL_ALPHA,
+    kami_drone.accel_data.roll,
+    kami_drone.roll + ((kami_drone.gyro_data.raw_roll_dot/GYRO_SCALING)*DELTA_TIME));
+
+  kami_drone.pitch = nm_expMovAvg(FIL_ALPHA,
+    kami_drone.accel_data.pitch,
+    kami_drone.pitch + ((kami_drone.gyro_data.raw_pitch_dot/GYRO_SCALING)*DELTA_TIME));
+
+  digitalWriteFast(TEST_PIN2, LOW);
 }
 
 void loop() {
   static int i = 0;
-  digitalWriteFast(35, HIGH);
   accel_read(&kami_drone.accel_data);
   gyro_read(&kami_drone.gyro_data);
-  digitalWriteFast(35, LOW);
 
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
   display.setCursor(0,0);
-  display.println(kami_drone.accel_data.raw_z);
+  display.println(kami_drone.roll);
   display.setCursor(0,10);
-  display.println(kami_drone.gyro_data.raw_roll_dot);
-  display.setCursor(0,20);
-  display.println(i++, HEX);
+  display.println(kami_drone.pitch);
   display.display();
   display.clearDisplay();
 }
 
 extern "C" int main(void) {
   pinMode(13, OUTPUT);
-  pinMode(35, OUTPUT);
+  pinMode(TEST_PIN1, OUTPUT);
+  pinMode(TEST_PIN2, OUTPUT);
   digitalWriteFast(13, HIGH);
   delay(500);
   digitalWriteFast(13, LOW);
