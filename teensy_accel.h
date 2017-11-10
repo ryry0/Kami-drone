@@ -2,6 +2,7 @@
 #define TEENSY_ACCEL_H_
 
 #include <stdint.h>
+#include <math.h>
 
 //Accelerometer defines
 #define ADXL345       0x53
@@ -42,5 +43,14 @@ inline void accel_convertToGs(volatile accel_data_t *accel_data) {
   accel_data->xg = accel_data->raw_x * ACCEL_SCALING;
   accel_data->yg = accel_data->raw_y * ACCEL_SCALING;
   accel_data->zg = accel_data->raw_z * ACCEL_SCALING;
+}
+
+inline void accel_calcAngle(volatile accel_data_t *accel_data) {
+  //derive angle from accelerometer
+  accel_data->roll = atan2(accel_data->yg, accel_data->zg)* 180/M_PI;
+
+  accel_data->pitch = atan2(-accel_data->xg,
+      sqrt(accel_data->yg*accel_data->yg + accel_data->zg*accel_data->zg))*
+    180/M_PI;
 }
 #endif
