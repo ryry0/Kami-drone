@@ -11,15 +11,6 @@
 #define I2C_SDA 34
 #define I2C_SCL 33
 
-struct ring_buffer_s ring_buff;
-
-Adafruit_SSD1306 display(OLED_RESET);
-
-#define NUMFLAKES 10
-#define XPOS 0
-#define YPOS 1
-#define DELTAY 2
-
 #define TEST_PIN1 35
 #define TEST_PIN2 36
 
@@ -29,31 +20,13 @@ Adafruit_SSD1306 display(OLED_RESET);
 
 #define I2C_FASTMODE 400000
 
-#define LOGO16_GLCD_HEIGHT 16
-#define LOGO16_GLCD_WIDTH  16
-static const unsigned char PROGMEM logo16_glcd_bmp[] =
-{ B00000000, B11000000,
-  B00000001, B11000000,
-  B00000001, B11000000,
-  B00000011, B11100000,
-  B11110011, B11100000,
-  B11111110, B11111000,
-  B01111110, B11111111,
-  B00110011, B10011111,
-  B00011111, B11111100,
-  B00001101, B01110000,
-  B00011011, B10100000,
-  B00111111, B11100000,
-  B00111111, B11110000,
-  B01111100, B11110000,
-  B01110000, B01110000,
-  B00000000, B00110000 };
-
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 
 IntervalTimer control_timer;
+Adafruit_SSD1306 display(OLED_RESET);
+
 
 typedef struct kami_drone_s {
   accel_data_t accel_data;
@@ -67,6 +40,8 @@ volatile kami_drone_t kami_drone;
 void setup() {
   //-----------------
   Serial.begin(9600);
+  Serial1.begin(115200);
+
   Wire.setSDA(I2C_SDA);
   Wire.setSCL(I2C_SCL);
   Wire.begin();
@@ -90,7 +65,6 @@ void controlLoop() {
   static float roll = 0;
   digitalWriteFast(TEST_PIN1, HIGH);
   digitalWriteFast(TEST_PIN2, HIGH);
-  //for (volatile size_t i = 0; i < 1000; ++i) { }
   digitalWriteFast(TEST_PIN1, LOW);
 
   accel_convertToGs(&kami_drone.accel_data);
@@ -118,6 +92,21 @@ void loop() {
   display.println(kami_drone.pitch);
   display.display();
   display.clearDisplay();
+
+  if (Serial.available() > 0) {
+
+    uint8_t rec_byte = Serial.read();
+    switch(rec_byte) {
+      case 'a':
+        Serial1.print("AT\r\n");
+        break;
+    }
+  }
+
+  while (Serial1.available() > 0) {
+    uint8_t rec_byte = Serial1.read();
+    Serial.write(rec_byte);
+  }
 }
 
 extern "C" int main(void) {
