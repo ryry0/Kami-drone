@@ -37,21 +37,32 @@ typedef struct kami_drone_s {
 
 volatile kami_drone_t kami_drone;
 
-void setup() {
-  //-----------------
+void setupSerial() {
   Serial.begin(9600);
   Serial1.begin(115200);
+}
 
+void setupWire() {
   Wire.setSDA(I2C_SDA);
   Wire.setSCL(I2C_SCL);
   Wire.begin();
   Wire.setClock(I2C_FASTMODE);
+}
 
+void setupDisplay() {
   display.setTextSize(1);
   display.setTextColor(WHITE);
 
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
+}
+
+void setup() {
+  //-----------------
+  setupSerial();
+  setupWire();
+  setupDisplay();
+
   // init done
   //-----------------
   accel_init();
