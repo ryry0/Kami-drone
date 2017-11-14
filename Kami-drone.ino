@@ -12,6 +12,12 @@
 #define I2C_SDA 34
 #define I2C_SCL 33
 
+#define MOTOR_PIN_1 38
+#define MOTOR_PIN_2 37
+#define MOTOR_PIN_3 36
+#define MOTOR_PIN_4 35
+#define PWM_FREQ 12000
+
 #define TEST_PIN1 35
 #define TEST_PIN2 36
 
@@ -43,6 +49,14 @@ void setupSerial() {
   Serial1.begin(115200);
 }
 
+void setupPWM() {
+  pinMode(MOTOR_PIN_1, OUTPUT);
+  pinMode(MOTOR_PIN_2, OUTPUT);
+  pinMode(MOTOR_PIN_3, OUTPUT);
+  pinMode(MOTOR_PIN_4, OUTPUT);
+  analogWriteFrequency(MOTOR_PIN_1, PWM_FREQ);
+}
+
 void setupWire() {
   Wire.setSDA(I2C_SDA);
   Wire.setSCL(I2C_SCL);
@@ -67,7 +81,8 @@ void setup() {
   //-----------------
   setupSerial();
   setupWire();
-  setupDisplay();
+  setupPWM();
+  //setupDisplay();
 
   // init done
   //-----------------
@@ -101,10 +116,16 @@ void controlLoop() {
 void loop() {
   static int i = 0;
   static bool print_stuff = false;
+  static bool motor1_on = false;
+  static bool motor2_on = false;
+  static bool motor3_on = false;
+  static bool motor4_on = false;
+  static uint8_t motor_speed = 20;
+
   accel_read(&kami_drone.accel_data);
   gyro_read(&kami_drone.gyro_data);
 
-/*
+  /*
   display.setCursor(0,0);
   display.println(kami_drone.roll);
   display.setCursor(0,10);
@@ -112,6 +133,7 @@ void loop() {
   display.display();
   display.clearDisplay();
   */
+
   if (print_stuff) {
     Serial.print(kami_drone.roll);
     Serial.print(" ");
@@ -123,6 +145,22 @@ void loop() {
 
     uint8_t rec_byte = Serial.read();
     switch(rec_byte) {
+      case '1':
+        motor1_on = !motor1_on;
+        break;
+
+      case '2':
+        motor2_on = !motor2_on;
+        break;
+
+      case '3':
+        motor3_on = !motor3_on;
+        break;
+
+      case '4':
+        motor4_on = !motor4_on;
+        break;
+
       case 'a':
         Serial1.print("AT\r\n");
         break;
@@ -161,8 +199,49 @@ void loop() {
       case 'p':
         print_stuff = !print_stuff;
         break;
+
+      case '+':
+        motor_speed += 10;
+        Serial.println(motor_speed);
+        break;
+
+      case '-':
+        motor_speed -= 10;
+        Serial.println(motor_speed);
+        break;
+
+      case 'M':
+        motor_speed = 255;
+        Serial.println(motor_speed);
+        break;
+
+      case 'm':
+        motor_speed = 0;
+        Serial.println(motor_speed);
+        break;
+
+      case 'z':
+        motor_speed = 20;
+        Serial.println(motor_speed);
+        break;
     }
   }
+
+/*
+  if (motor1_on) analogWrite(MOTOR_PIN_1, motor_speed);
+  else analogWrite(MOTOR_PIN_1, 0);
+
+  if (motor2_on) analogWrite(MOTOR_PIN_2, 150);
+  else analogWrite(MOTOR_PIN_2, 0);
+
+  if (motor3_on) analogWrite(MOTOR_PIN_3, 150);
+  else analogWrite(MOTOR_PIN_3, 0);
+
+  if (motor4_on) analogWrite(MOTOR_PIN_4, 150);
+  else analogWrite(MOTOR_PIN_4, 0);
+  */
+
+  analogWrite(MOTOR_PIN_1, motor_speed);
 
   while (Serial1.available() > 0) {
     uint8_t rec_byte = Serial1.read();
