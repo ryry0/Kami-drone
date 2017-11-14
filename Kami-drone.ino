@@ -5,6 +5,7 @@
 #include "ring_buffer.h"
 #include "teensy_accel.h"
 #include "teensy_gyro.h"
+#include "teensy_esp8266.h"
 #include "numerical.h"
 
 #define OLED_RESET 15
@@ -57,6 +58,11 @@ void setupDisplay() {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
 }
 
+void setupWifi() {
+  wifi_sendCommand(&Serial1, "ATE0\r\n");
+
+}
+
 void setup() {
   //-----------------
   setupSerial();
@@ -94,15 +100,24 @@ void controlLoop() {
 
 void loop() {
   static int i = 0;
+  static bool print_stuff = false;
   accel_read(&kami_drone.accel_data);
   gyro_read(&kami_drone.gyro_data);
 
+/*
   display.setCursor(0,0);
   display.println(kami_drone.roll);
   display.setCursor(0,10);
   display.println(kami_drone.pitch);
   display.display();
   display.clearDisplay();
+  */
+  if (print_stuff) {
+    Serial.print(kami_drone.roll);
+    Serial.print(" ");
+    Serial.print(kami_drone.pitch);
+    Serial.print("\n");
+  }
 
   if (Serial.available() > 0) {
 
@@ -111,6 +126,41 @@ void loop() {
       case 'a':
         Serial1.print("AT\r\n");
         break;
+
+      case 'r':
+        wifi_sendCommand(&Serial1, AT_RESET);
+        break;
+
+      case 'w':
+        wifi_sendCommand(&Serial1, AT_CREAT_AP);
+        delay(1000);
+        wifi_sendCommand(&Serial1, AT_ACCEPT_CONNS);
+        delay(1000);
+        wifi_sendCommand(&Serial1, AT_MULTI_CONN);
+        delay(1000);
+        wifi_sendCommand(&Serial1, AT_CREAT_SERVER);
+        delay(1000);
+        break;
+
+      case 'e':
+        wifi_sendCommand(&Serial1, AT_ECHO_OFF);
+        break;
+
+      case 'E':
+        wifi_sendCommand(&Serial1, AT_ECHO_ON);
+        break;
+
+      case 'q':
+        wifi_sendCommand(&Serial1, AT_QUERY_AP);
+        break;
+
+      case 'Q':
+        wifi_sendCommand(&Serial1, AT_GET_CLIENTS);
+        break;
+
+      case 'p':
+        print_stuff = !print_stuff;
+        break;
     }
   }
 
@@ -118,6 +168,7 @@ void loop() {
     uint8_t rec_byte = Serial1.read();
     Serial.write(rec_byte);
   }
+  delay(10);
 }
 
 extern "C" int main(void) {
