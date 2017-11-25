@@ -4,6 +4,7 @@
 
 typedef enum pkt_type_e {
   PKT_ACK         = 0x0A,
+  PKT_DATA_START,
   PKT_LOG_PARAMS,
   PKT_SET_PARAMS,
   PKT_GET_PARAMS,

@@ -11,6 +11,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 //@{
 /** \brief General use constants */
 #define MAX_PAYLOAD_LENGTH 251
@@ -147,4 +150,7 @@ inline void pkt_setHeaderTypeOnly(pkt_generic_t *packet, uint8_t type) {
   pkt_setHeader(packet, type, 0);
 }
 
+#ifdef __cplusplus
+}
+#endif
 #endif
