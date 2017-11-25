@@ -7,9 +7,10 @@ typedef enum pkt_type_e {
   PKT_LOG_PARAMS,
   PKT_SET_PARAMS,
   PKT_GET_PARAMS,
-  PKT_STR_MSG,
   PKT_SET_STATE,
-  PKT_DATA_START,
+  PKT_CALIBRATE,
+  PKT_KILL,
+  TAKE_OFF,
   PKT_SYN         = 0xFF
 } pkt_type_t;
 
@@ -23,6 +24,7 @@ typedef enum pkt_type_e {
   PARAM(PKT_Y_KP)                   \
   PARAM(PKT_Y_KI)                   \
   PARAM(PKT_Y_KD)                   \
+  PARAM(PKT_TAKEOFF_THROTTLE)       \
   PARAM(PKT_PARAM_MAX)              \
 
 #define GENERATE_ENUM(ENUM) ENUM,
