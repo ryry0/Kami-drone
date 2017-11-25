@@ -388,6 +388,10 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
     mvu_sendHeaderMsg(model, PKT_GET_PARAMS);
   }
 
+  /* make this nonblocking hopefully somehow
+  if (model->port_state == PORT_OPEN)
+    mvu_handleData(model);
+    */
 }
 
 /*----------------------------------------------------------------------------*/
@@ -425,10 +429,10 @@ void  mvu_view(const mvu_model_t model, mvu_msg_t msg) {
 
   msg->button_presses[BTN_OPEN_PORT] = multiLabelToggle(ctx, PORT_BUTTON_LABELS, model->port_state);
 
-  nk_layout_row_dynamic(ctx, 50, 1);
+  nk_layout_row_dynamic(ctx, 100, 1);
   msg->button_presses[BTN_TAKEOFF] = nk_button_label(ctx, "TAKE OFF");
 
-  nk_layout_row_dynamic(ctx, 100, 1);
+  nk_layout_row_dynamic(ctx, 300, 1);
   msg->button_presses[BTN_KILL] = nk_button_label(ctx, "KILL");
 
 

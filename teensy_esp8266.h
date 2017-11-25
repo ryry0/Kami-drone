@@ -22,3 +22,5 @@
 inline void wifi_sendCommand(HardwareSerial *hwserial, char *command) {
   (*hwserial).write((uint8_t *)command, strlen(command));
 }
+
+inline void wifi_sendData() {}
