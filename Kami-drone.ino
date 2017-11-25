@@ -226,13 +226,17 @@ void loop() {
   mtr_setSpeed(&kami_drone.motor3, kami_drone.debug_motor_speed);
   mtr_setSpeed(&kami_drone.motor4, kami_drone.debug_motor_speed);
 
+  handleWifi((kami_drone_t *) &kami_drone);
+  delay(10);
+}
+
+void handleWifi(struct kami_drone_s *kami_drone) {
   while (WIFI_SERIAL.available() > 0) {
     uint8_t rec_byte = WIFI_SERIAL.read();
 #ifdef WIFI_DEBUG
     USB_SERIAL.write(rec_byte);
 #endif
   }
-  delay(10);
 }
 
 void handleKeyCommands(struct kami_drone_s *kami_drone, uint8_t rec_byte) {
