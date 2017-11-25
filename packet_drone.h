@@ -19,12 +19,12 @@ typedef enum pkt_type_e {
 /** Macro to easily add parameters and ensure that they are synced with gui
  * labels */
 #define FOREACH_PARAM(PARAM)            \
-  PARAM(PKT_X_KP)                   \
-  PARAM(PKT_X_KI)                   \
-  PARAM(PKT_X_KD)                   \
-  PARAM(PKT_Y_KP)                   \
-  PARAM(PKT_Y_KI)                   \
-  PARAM(PKT_Y_KD)                   \
+  PARAM(PKT_ROLL_KP)                   \
+  PARAM(PKT_ROLL_KI)                   \
+  PARAM(PKT_ROLL_KD)                   \
+  PARAM(PKT_PITCH_KP)                   \
+  PARAM(PKT_PITCH_KI)                   \
+  PARAM(PKT_PITCH_KD)                   \
   PARAM(PKT_TAKEOFF_THROTTLE)       \
   PARAM(PKT_PARAM_MAX)              \
 
