@@ -63,6 +63,7 @@ Adafruit_SSD1306 display(OLED_RESET);
 typedef struct kami_drone_s {
   accel_data_t accel_data;
   gyro_data_t gyro_data;
+  bool usb_print;
   float roll;
   float pitch;
 } kami_drone_t;
@@ -98,7 +99,8 @@ void setupDisplay() {
 }
 
 void setupWifi() {
-  wifi_sendCommand(&WIFI_SERIAL, "ATE0\r\n");
+  //wifi_sendCommand(&WIFI_SERIAL, "ATE0\r\n");
+
 }
 
 void setup() {
@@ -166,111 +168,8 @@ void loop() {
   }
 
   if (USB_SERIAL.available() > 0) {
-
     uint8_t rec_byte = USB_SERIAL.read();
-    switch(rec_byte) {
-      case '1':
-        motor1_on = !motor1_on;
-        break;
-
-      case '2':
-        motor2_on = !motor2_on;
-        break;
-
-      case '3':
-        motor3_on = !motor3_on;
-        break;
-
-      case '4':
-        motor4_on = !motor4_on;
-        break;
-
-      case 'a':
-        WIFI_SERIAL.print("AT\r\n");
-        break;
-
-      case 'r':
-        wifi_sendCommand(&WIFI_SERIAL, AT_RESET);
-        break;
-
-      case 't':
-        wifi_sendCommand(&WIFI_SERIAL, AT_QUERY_TIMEOUT);
-        break;
-
-      case 'T':
-        wifi_sendCommand(&WIFI_SERIAL, AT_SET_TIMEOUT);
-        break;
-
-      case 's':
-        wifi_sendCommand(&WIFI_SERIAL, AT_STATUS);
-        break;
-
-      case 'w':
-        wifi_sendCommand(&WIFI_SERIAL, AT_AP_MODE);
-        delay(1000);
-        wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_AP);
-        delay(1000);
-        wifi_sendCommand(&WIFI_SERIAL, AT_MULTI_CONN);
-        delay(1000);
-        wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_SERVER);
-        delay(1000);
-        break;
-
-      case 'e':
-        wifi_sendCommand(&WIFI_SERIAL, AT_ECHO_OFF);
-        break;
-
-      case 'E':
-        wifi_sendCommand(&WIFI_SERIAL, AT_ECHO_ON);
-        break;
-
-      case 'q':
-        wifi_sendCommand(&WIFI_SERIAL, AT_QUERY_AP);
-        break;
-
-      case 'Q':
-        wifi_sendCommand(&WIFI_SERIAL, AT_GET_CLIENTS);
-        break;
-
-      case 'p':
-        print_stuff = !print_stuff;
-        break;
-
-      case 'P':
-        USB_SERIAL.println(kami_drone.accel_data.x_off); //-3, -5 62 -50 21 -14
-        USB_SERIAL.println(kami_drone.accel_data.y_off);
-        USB_SERIAL.println(kami_drone.accel_data.z_off);
-
-        USB_SERIAL.println(kami_drone.gyro_data.roll_dot_off);
-        USB_SERIAL.println(kami_drone.gyro_data.pitch_dot_off);
-        USB_SERIAL.println(kami_drone.gyro_data.yaw_dot_off);
-        break;
-
-      case '+':
-        motor_speed += 5;
-        USB_SERIAL.println(motor_speed);
-        break;
-
-      case '-':
-        motor_speed -= 5;
-        USB_SERIAL.println(motor_speed);
-        break;
-
-      case 'M':
-        motor_speed = 255;
-        USB_SERIAL.println(motor_speed);
-        break;
-
-      case 'm':
-        motor_speed = 0;
-        USB_SERIAL.println(motor_speed);
-        break;
-
-      case 'z':
-        motor_speed = MOTOR_ZERO_SPEED;
-        USB_SERIAL.println(motor_speed);
-        break;
-    }
+    handleKeyCommands(rec_byte);
   }
 
   if (motor1_on) analogWrite(MOTOR_PIN_1, motor_speed);
@@ -306,5 +205,111 @@ extern "C" int main(void) {
   while (1) {
     loop();
     yield();
+  }
+}
+
+void handleKeyCommands(uint8_t rec_byte) {
+  switch(rec_byte) {
+    case '1':
+      motor1_on = !motor1_on;
+      break;
+
+    case '2':
+      motor2_on = !motor2_on;
+      break;
+
+    case '3':
+      motor3_on = !motor3_on;
+      break;
+
+    case '4':
+      motor4_on = !motor4_on;
+      break;
+
+    case 'a':
+      WIFI_SERIAL.print("AT\r\n");
+      break;
+
+    case 'r':
+      wifi_sendCommand(&WIFI_SERIAL, AT_RESET);
+      break;
+
+    case 't':
+      wifi_sendCommand(&WIFI_SERIAL, AT_QUERY_TIMEOUT);
+      break;
+
+    case 'T':
+      wifi_sendCommand(&WIFI_SERIAL, AT_SET_TIMEOUT);
+      break;
+
+    case 's':
+      wifi_sendCommand(&WIFI_SERIAL, AT_STATUS);
+      break;
+
+    case 'w':
+      wifi_sendCommand(&WIFI_SERIAL, AT_AP_MODE);
+      delay(1000);
+      wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_AP);
+      delay(1000);
+      wifi_sendCommand(&WIFI_SERIAL, AT_MULTI_CONN);
+      delay(1000);
+      wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_SERVER);
+      delay(1000);
+      break;
+
+    case 'e':
+      wifi_sendCommand(&WIFI_SERIAL, AT_ECHO_OFF);
+      break;
+
+    case 'E':
+      wifi_sendCommand(&WIFI_SERIAL, AT_ECHO_ON);
+      break;
+
+    case 'q':
+      wifi_sendCommand(&WIFI_SERIAL, AT_QUERY_AP);
+      break;
+
+    case 'Q':
+      wifi_sendCommand(&WIFI_SERIAL, AT_GET_CLIENTS);
+      break;
+
+    case 'p':
+      print_stuff = !print_stuff;
+      break;
+
+    case 'P':
+      USB_SERIAL.println(kami_drone.accel_data.x_off); //-3, -5 62 -50 21 -14
+      USB_SERIAL.println(kami_drone.accel_data.y_off);
+      USB_SERIAL.println(kami_drone.accel_data.z_off);
+
+      USB_SERIAL.println(kami_drone.gyro_data.roll_dot_off);
+      USB_SERIAL.println(kami_drone.gyro_data.pitch_dot_off);
+      USB_SERIAL.println(kami_drone.gyro_data.yaw_dot_off);
+      break;
+
+    case '+':
+      motor_speed += 5;
+      USB_SERIAL.println(motor_speed);
+      break;
+
+    case '-':
+      motor_speed -= 5;
+      USB_SERIAL.println(motor_speed);
+      break;
+
+    case 'M':
+      motor_speed = 255;
+      USB_SERIAL.println(motor_speed);
+      break;
+
+    case 'm':
+      motor_speed = 0;
+      USB_SERIAL.println(motor_speed);
+      break;
+
+    case 'z':
+      motor_speed = MOTOR_ZERO_SPEED;
+      USB_SERIAL.println(motor_speed);
+      break;
   }
 }
