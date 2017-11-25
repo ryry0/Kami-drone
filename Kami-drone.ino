@@ -17,6 +17,7 @@
 #define MOTOR_PIN_3 36
 #define MOTOR_PIN_4 35
 #define PWM_FREQ 12000
+#define MOTOR_ZERO_SPEED 20
 
 #define TEST_PIN1 35
 #define TEST_PIN2 36
@@ -26,6 +27,8 @@
 #define LOOP_CLOSURE_US 2000
 
 #define I2C_FASTMODE 400000
+#define WIFI_SERIAL Serial1
+#define USB_SERIAL  Serial
 
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
@@ -34,6 +37,26 @@
 IntervalTimer control_timer;
 Adafruit_SSD1306 display(OLED_RESET);
 
+
+/**
+ todo:
+  Make wifi work
+    recieve data
+    activate on :\x00
+    interpret data
+
+  Get general offset
+
+  Write control algo
+    tune it
+    tune cascaded
+
+  Params
+    PID params
+    Calibrate
+
+  Controller?
+**/
 
 typedef struct kami_drone_s {
   accel_data_t accel_data;
@@ -45,8 +68,8 @@ typedef struct kami_drone_s {
 volatile kami_drone_t kami_drone;
 
 void setupSerial() {
-  Serial.begin(9600);
-  Serial1.begin(115200);
+  USB_SERIAL.begin(9600);
+  WIFI_SERIAL.begin(115200);
 }
 
 void setupPWM() {
@@ -73,8 +96,7 @@ void setupDisplay() {
 }
 
 void setupWifi() {
-  wifi_sendCommand(&Serial1, "ATE0\r\n");
-
+  wifi_sendCommand(&WIFI_SERIAL, "ATE0\r\n");
 }
 
 void setup() {
@@ -120,7 +142,7 @@ void loop() {
   static bool motor2_on = false;
   static bool motor3_on = false;
   static bool motor4_on = false;
-  static uint8_t motor_speed = 20;
+  static uint8_t motor_speed = MOTOR_ZERO_SPEED;
 
   accel_read(&kami_drone.accel_data);
   gyro_read(&kami_drone.gyro_data);
@@ -135,15 +157,15 @@ void loop() {
   */
 
   if (print_stuff) {
-    Serial.print(kami_drone.roll);
-    Serial.print(" ");
-    Serial.print(kami_drone.pitch);
-    Serial.print("\n");
+    USB_SERIAL.print(kami_drone.roll);
+    USB_SERIAL.print(" ");
+    USB_SERIAL.print(kami_drone.pitch);
+    USB_SERIAL.print("\n");
   }
 
-  if (Serial.available() > 0) {
+  if (USB_SERIAL.available() > 0) {
 
-    uint8_t rec_byte = Serial.read();
+    uint8_t rec_byte = USB_SERIAL.read();
     switch(rec_byte) {
       case '1':
         motor1_on = !motor1_on;
@@ -162,38 +184,38 @@ void loop() {
         break;
 
       case 'a':
-        Serial1.print("AT\r\n");
+        WIFI_SERIAL.print("AT\r\n");
         break;
 
       case 'r':
-        wifi_sendCommand(&Serial1, AT_RESET);
+        wifi_sendCommand(&WIFI_SERIAL, AT_RESET);
         break;
 
       case 'w':
-        wifi_sendCommand(&Serial1, AT_CREAT_AP);
+        wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_AP);
         delay(1000);
-        wifi_sendCommand(&Serial1, AT_ACCEPT_CONNS);
+        wifi_sendCommand(&WIFI_SERIAL, AT_ACCEPT_CONNS);
         delay(1000);
-        wifi_sendCommand(&Serial1, AT_MULTI_CONN);
+        wifi_sendCommand(&WIFI_SERIAL, AT_MULTI_CONN);
         delay(1000);
-        wifi_sendCommand(&Serial1, AT_CREAT_SERVER);
+        wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_SERVER);
         delay(1000);
         break;
 
       case 'e':
-        wifi_sendCommand(&Serial1, AT_ECHO_OFF);
+        wifi_sendCommand(&WIFI_SERIAL, AT_ECHO_OFF);
         break;
 
       case 'E':
-        wifi_sendCommand(&Serial1, AT_ECHO_ON);
+        wifi_sendCommand(&WIFI_SERIAL, AT_ECHO_ON);
         break;
 
       case 'q':
-        wifi_sendCommand(&Serial1, AT_QUERY_AP);
+        wifi_sendCommand(&WIFI_SERIAL, AT_QUERY_AP);
         break;
 
       case 'Q':
-        wifi_sendCommand(&Serial1, AT_GET_CLIENTS);
+        wifi_sendCommand(&WIFI_SERIAL, AT_GET_CLIENTS);
         break;
 
       case 'p':
@@ -201,51 +223,47 @@ void loop() {
         break;
 
       case '+':
-        motor_speed += 10;
-        Serial.println(motor_speed);
+        motor_speed += 5;
+        USB_SERIAL.println(motor_speed);
         break;
 
       case '-':
-        motor_speed -= 10;
-        Serial.println(motor_speed);
+        motor_speed -= 5;
+        USB_SERIAL.println(motor_speed);
         break;
 
       case 'M':
         motor_speed = 255;
-        Serial.println(motor_speed);
+        USB_SERIAL.println(motor_speed);
         break;
 
       case 'm':
         motor_speed = 0;
-        Serial.println(motor_speed);
+        USB_SERIAL.println(motor_speed);
         break;
 
       case 'z':
-        motor_speed = 20;
-        Serial.println(motor_speed);
+        motor_speed = MOTOR_ZERO_SPEED;
+        USB_SERIAL.println(motor_speed);
         break;
     }
   }
 
-/*
   if (motor1_on) analogWrite(MOTOR_PIN_1, motor_speed);
-  else analogWrite(MOTOR_PIN_1, 0);
+  else analogWrite(MOTOR_PIN_1, MOTOR_ZERO_SPEED);
 
-  if (motor2_on) analogWrite(MOTOR_PIN_2, 150);
-  else analogWrite(MOTOR_PIN_2, 0);
+  if (motor2_on) analogWrite(MOTOR_PIN_2, motor_speed);
+  else analogWrite(MOTOR_PIN_2, MOTOR_ZERO_SPEED);
 
-  if (motor3_on) analogWrite(MOTOR_PIN_3, 150);
-  else analogWrite(MOTOR_PIN_3, 0);
+  if (motor3_on) analogWrite(MOTOR_PIN_3, motor_speed);
+  else analogWrite(MOTOR_PIN_3, MOTOR_ZERO_SPEED);
 
-  if (motor4_on) analogWrite(MOTOR_PIN_4, 150);
-  else analogWrite(MOTOR_PIN_4, 0);
-  */
+  if (motor4_on) analogWrite(MOTOR_PIN_4, motor_speed);
+  else analogWrite(MOTOR_PIN_4, MOTOR_ZERO_SPEED);
 
-  analogWrite(MOTOR_PIN_1, motor_speed);
-
-  while (Serial1.available() > 0) {
-    uint8_t rec_byte = Serial1.read();
-    Serial.write(rec_byte);
+  while (WIFI_SERIAL.available() > 0) {
+    uint8_t rec_byte = WIFI_SERIAL.read();
+    USB_SERIAL.write(rec_byte);
   }
   delay(10);
 }

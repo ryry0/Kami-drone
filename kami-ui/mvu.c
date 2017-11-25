@@ -60,6 +60,7 @@ enum ring_buffer_index_t {
 
 enum button_press_t {
   BTN_OPEN_PORT,
+  BTN_SEND_STUFF,
   BTN_GRAPH,
   BTN_MAX
 };
@@ -363,8 +364,14 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
   if (msg->button_presses[BTN_GRAPH])
     model->graph_state = !model->graph_state;
 
-  if (tcp_getSocket(model->tcp_conn) == SOCKET_ERROR);
+  if (tcp_getSocket(model->tcp_conn) == SOCKET_ERROR)
     return;
+
+  {
+    uint8_t buff[5] = {'a', 'b', 'c', 'd', 'e'};
+    if (msg->button_presses[BTN_SEND_STUFF])
+      tcp_sendData(model->tcp_conn, buff, 5);
+  }
 
   /*
   if (msg->button_presses[BTN_RECORD])
@@ -444,151 +451,6 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
 
 static void mvu_drawPIDPlot(const mvu_model_t model, mvu_msg_t msg) {
   struct nk_context *ctx = model->ctx;
-  /*
-#define PLOT1_NUM_LINES 2
-#define PLOT2_NUM_LINES 2
-#define PLOT3_NUM_LINES 2
-#define PLOT4_NUM_LINES 2
-
-  float draw_setpoint_buff[R_BUFF_SIZE] = {0};
-  float draw_pos_buff[R_BUFF_SIZE] = {0};
-
-  float draw_speed_buff[R_BUFF_SIZE] = {0};
-  float draw_com_speed_buff[R_BUFF_SIZE] = {0};
-
-  float draw_current_buff[R_BUFF_SIZE] = {0};
-  float draw_com_current_buff[R_BUFF_SIZE] = {0};
-
-  float draw_motor_pwm_buff[R_BUFF_SIZE] = {0};
-  float draw_motor_direction_buff[R_BUFF_SIZE] = {0};
-
-  enum ring_buffer_index_t setpoint_index =
-    leg_graph == LEG_GRAPH_LEFT ?  RB_L_SETPOINT : RB_R_SETPOINT;
-
-  enum ring_buffer_index_t position_index =
-    leg_graph == LEG_GRAPH_LEFT ?  RB_L_POSITION : RB_R_POSITION;
-
-  enum ring_buffer_index_t velocity_index =
-    leg_graph == LEG_GRAPH_LEFT ? RB_L_VELOCITY : RB_R_VELOCITY;
-
-  enum ring_buffer_index_t velocity_command_index =
-    leg_graph == LEG_GRAPH_LEFT ? RB_L_VELOCITY_COMMAND : RB_R_VELOCITY_COMMAND;
-
-  enum ring_buffer_index_t current_index =
-    leg_graph == LEG_GRAPH_LEFT ? RB_L_CURRENT : RB_R_CURRENT;
-
-  enum ring_buffer_index_t current_command_index =
-    leg_graph == LEG_GRAPH_LEFT ? RB_L_CURRENT_COMMAND : RB_R_CURRENT_COMMAND;
-
-  struct plot_object_s plot1_lines[PLOT1_NUM_LINES] = {0};
-  struct plot_object_s plot2_lines[PLOT2_NUM_LINES] = {0};
-  struct plot_object_s plot3_lines[PLOT3_NUM_LINES] = {0};
-  struct plot_object_s plot4_lines[PLOT4_NUM_LINES] = {0};
-
-  rb_read(model->ring_buffers[setpoint_index], draw_setpoint_buff);
-  rb_read(model->ring_buffers[position_index], draw_pos_buff);
-  rb_read(model->ring_buffers[velocity_index], draw_speed_buff);
-  rb_read(model->ring_buffers[velocity_command_index], draw_com_speed_buff);
-
-  rb_read(model->ring_buffers[current_index], draw_current_buff);
-  rb_read(model->ring_buffers[current_command_index], draw_com_current_buff);
-
-  rb_read(model->motor_pwm_buff, draw_motor_pwm_buff);
-  rb_read(model->motor_direction_buff, draw_motor_direction_buff);
-
-  plot1_lines[0] = (struct plot_object_s) {
-    .draw_buffer = draw_pos_buff,
-      .length      = R_BUFF_SIZE,
-      .title       = "Setpoint: red, Pos: black",
-      .color       = nk_rgb(50, 50, 50),
-      .height      = CHART_HEIGHT,
-      .ymin        = DPS_CHART_MIN,
-      .ymax        = DPS_CHART_MAX
-  };
-
-  plot1_lines[1] = (struct plot_object_s) {
-    .draw_buffer = draw_setpoint_buff,
-      .length      = R_BUFF_SIZE,
-      .title       = "Setpoint: red, Pos: black",
-      .color       = nk_rgb(255, 0, 0),
-      .height      = CHART_HEIGHT,
-      .ymin        = DPS_CHART_MIN,
-      .ymax        = DPS_CHART_MAX
-  };
-
-
-
-  plot2_lines[0] = (struct plot_object_s) {
-    .draw_buffer = draw_speed_buff,
-      .length      = R_BUFF_SIZE,
-      .title       = "Com Vel: red, Vel: black",
-      .color       = nk_rgb(50, 50, 50),
-      .height      = CHART_HEIGHT,
-      .ymin        = DPS_CHART_MIN,
-      .ymax        = DPS_CHART_MAX
-  };
-
-  plot2_lines[1] = (struct plot_object_s) {
-    .draw_buffer = draw_com_speed_buff,
-      .length      = R_BUFF_SIZE,
-      .title       = "Com Vel: red, Vel: black",
-      .color       = nk_rgb(255, 0, 0),
-      .height      = CHART_HEIGHT,
-      .ymin        = DPS_CHART_MIN,
-      .ymax        = DPS_CHART_MAX
-  };
-
-  plot3_lines[0] = (struct plot_object_s) {
-    .draw_buffer = draw_current_buff,
-      .length      = R_BUFF_SIZE,
-      .title       = "Com current: red, Current: black",
-      .color       = nk_rgb(50, 50, 50),
-      .height      = CHART_HEIGHT,
-      .ymin        = CHART_MIN,
-      .ymax        = CHART_MAX
-  };
-
-
-  plot3_lines[1] = (struct plot_object_s) {
-    .draw_buffer = draw_com_current_buff,
-      .length      = R_BUFF_SIZE,
-      .title       = "Current: black, Com Current: red",
-      .color       = nk_rgb(255, 0, 0),
-      .height      = CHART_HEIGHT,
-      .ymin        = CHART_MIN,
-      .ymax        = CHART_MAX
-  };
-
-
-  plot4_lines[0] = (struct plot_object_s) {
-    .draw_buffer = draw_motor_pwm_buff,
-      .length      = R_BUFF_SIZE,
-      .title       = "Com current: red, Current: black",
-      .color       = nk_rgb(50, 50, 50),
-      .height      = CHART_HEIGHT,
-      .ymin        = PWM_CHART_MIN,
-      .ymax        = PWM_CHART_MAX
-  };
-
-
-  plot4_lines[1] = (struct plot_object_s) {
-    .draw_buffer = draw_motor_direction_buff,
-      .length      = R_BUFF_SIZE,
-      .title       = "Current: black, Com Current: red",
-      .color       = nk_rgb(255, 0, 0),
-      .height      = CHART_HEIGHT,
-      .ymin        = PWM_CHART_MIN,
-      .ymax        = PWM_CHART_MAX
-  };
-
-  nk_layout_row_dynamic(ctx, CHART_HEIGHT, 2);
-  plotN(ctx, plot1_lines, PLOT1_NUM_LINES);
-  plotN(ctx, plot2_lines, PLOT2_NUM_LINES);
-
-  nk_layout_row_dynamic(ctx, CHART_HEIGHT, 2);
-  plotN(ctx, plot3_lines, PLOT3_NUM_LINES);
-  //plotN(ctx, plot4_lines, PLOT4_NUM_LINES);
-  */
 }
 
 static void mvu_drawParamTextboxes(const mvu_model_t model, mvu_msg_t msg) {
@@ -651,6 +513,8 @@ void  mvu_view(const mvu_model_t model, mvu_msg_t msg) {
   msg->serial_addr[msg->serial_addr_len] = 0;
 
   msg->button_presses[BTN_OPEN_PORT] = multiLabelToggle(ctx, PORT_BUTTON_LABELS, model->port_state);
+
+  msg->button_presses[BTN_SEND_STUFF] = nk_button_label(ctx, "Send stuff");
 
   /*
   tab selection row
