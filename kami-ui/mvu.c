@@ -368,11 +368,8 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
   if (tcp_getSocket(model->tcp_conn) == SOCKET_ERROR)
     return;
 
-  {
-    uint8_t buff[5] = {'a', 'b', 'c', 'd', 'e'};
-    if (msg->button_presses[BTN_SEND_STUFF])
-      tcp_sendData(model->tcp_conn, buff, 5);
-  }
+  if (msg->button_presses[BTN_SEND_STUFF])
+    mvu_sendStartPacket(model);
 
   /*
   if (msg->button_presses[BTN_RECORD])
