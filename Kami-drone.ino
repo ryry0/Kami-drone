@@ -244,9 +244,14 @@ void handleWifi(struct kami_drone_s *kami_drone) {
 }
 
 void handlePacket(pkt_generic_t *packet) {
-  USB_SERIAL.print("tengo packet\n");
-  if (packet->type == PKT_DATA_START)
-    USB_SERIAL.print("weeener\n");
+  switch(packet->type) {
+    case PKT_KILL:
+      mtr_disable(&kami_drone.motor1);
+      mtr_disable(&kami_drone.motor2);
+      mtr_disable(&kami_drone.motor3);
+      mtr_disable(&kami_drone.motor4);
+      break;
+  }
 }
 
 void handleKeyCommands(struct kami_drone_s *kami_drone, uint8_t rec_byte) {

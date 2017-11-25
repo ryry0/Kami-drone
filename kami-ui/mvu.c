@@ -60,7 +60,7 @@ enum ring_buffer_index_t {
 
 enum button_press_t {
   BTN_OPEN_PORT,
-  BTN_SEND_STUFF,
+  BTN_KILL,
   BTN_GRAPH,
   BTN_MAX
 };
@@ -368,8 +368,8 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
   if (tcp_getSocket(model->tcp_conn) == SOCKET_ERROR)
     return;
 
-  if (msg->button_presses[BTN_SEND_STUFF])
-    mvu_sendStartPacket(model);
+  if (msg->button_presses[BTN_KILL])
+    mvu_sendHeaderMsg(model, PKT_KILL);
 
   /*
   if (msg->button_presses[BTN_RECORD])
@@ -512,7 +512,8 @@ void  mvu_view(const mvu_model_t model, mvu_msg_t msg) {
 
   msg->button_presses[BTN_OPEN_PORT] = multiLabelToggle(ctx, PORT_BUTTON_LABELS, model->port_state);
 
-  msg->button_presses[BTN_SEND_STUFF] = nk_button_label(ctx, "Send stuff");
+  nk_layout_row_dynamic(ctx, 100, 1);
+  msg->button_presses[BTN_KILL] = nk_button_label(ctx, "KILL");
 
   /*
   tab selection row
