@@ -176,6 +176,15 @@ void setupDisplay() {
 void setupWifi() {
   //wifi_sendCommand(&WIFI_SERIAL, "ATE0\r\n");
 
+  wifi_sendCommand(&WIFI_SERIAL, AT_RESET);
+  wifi_sendCommand(&WIFI_SERIAL, AT_AP_MODE);
+  delay(1000);
+  wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_AP);
+  delay(1000);
+  wifi_sendCommand(&WIFI_SERIAL, AT_MULTI_CONN);
+  delay(1000);
+  wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_SERVER);
+  delay(1000);
 }
 
 void setupDrone() {
@@ -211,6 +220,7 @@ void setup() {
   setupWire();
   setupPWM();
   setupDrone();
+  setupWifi();
   //setupDisplay();
 
   // init done
