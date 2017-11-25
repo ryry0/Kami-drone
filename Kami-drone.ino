@@ -7,14 +7,15 @@
 #include "teensy_gyro.h"
 #include "teensy_esp8266.h"
 #include "numerical.h"
+#include "packet.h"
 
 #define OLED_RESET 15
 #define I2C_SDA 34
 #define I2C_SCL 33
 
-#define MOTOR_PIN_1 38
+#define MOTOR_PIN_1 36
 #define MOTOR_PIN_2 37
-#define MOTOR_PIN_3 36
+#define MOTOR_PIN_3 38
 #define MOTOR_PIN_4 35
 #define PWM_FREQ 12000
 #define MOTOR_ZERO_SPEED 20
