@@ -68,7 +68,13 @@ typedef struct kami_drone_s {
   float pitch;
 } kami_drone_t;
 
-volatile kami_drone_t kami_drone;
+volatile kami_drone_t kami_drone = {
+  .accel_data = {0},
+  .gyro_data = {0},
+  .usb_print = false,
+  .roll = 0,
+  .pitch = 0
+};
 
 void setupSerial() {
   USB_SERIAL.begin(115200);
