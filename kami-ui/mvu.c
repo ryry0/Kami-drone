@@ -22,7 +22,7 @@
 #define CHART_MAX 13
 #define CHART_MIN -13
 #define PRINTF_DEBUG
-#define PORT 25550
+#define PORT 5555
 
 #define DEFAULT_SERIAL "/dev/ttyUSB0"
 #define CHART_HEIGHT 250
@@ -132,11 +132,7 @@ static void mvu_printf(char *format, ...) {
 
 //psoc doesn't like sending all at once for some reason.
 static size_t mvu_sendData(mvu_model_t model, uint8_t *buff, size_t len) {
-  size_t bytes_sent = 0;
-  for (size_t i = 0; i < len; ++i) {
-    tcp_sendData(model->tcp_conn, &buff[i], 1);
-  }
-  return bytes_sent;
+  tcp_sendData(model->tcp_conn, buff, len);
 }
 
 static void mvu_clearMessage(mvu_msg_t msg) {
@@ -296,16 +292,17 @@ static void mvu_forceSync(mvu_model_t model) {
 
 static void mvu_tryOpenPort(const mvu_msg_t msg, mvu_model_t model) {
 
-  printf("Connecting to host\n");
+  mvu_printf("Connect button pressed\n");
   if (tcp_getSocket(model->tcp_conn) == SOCKET_ERROR) {
     bool retval = tcp_connectToHost(model->tcp_conn, PORT, msg->serial_addr);
+    mvu_printf("trying to connect\n");
     if (retval) {
       model->port_state = PORT_OPEN;
-      mvu_sendStartPacket(model);
-      mvu_sendHeaderMsg(model, PKT_GET_PARAMS);
+      mvu_printf("connected\n");
     }
   }
   else {
+    mvu_printf("closing");
     tcp_closeSocket(model->tcp_conn);
     model->port_state = PORT_CLOSED;
   }

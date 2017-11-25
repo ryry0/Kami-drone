@@ -191,10 +191,22 @@ void loop() {
         wifi_sendCommand(&WIFI_SERIAL, AT_RESET);
         break;
 
+      case 't':
+        wifi_sendCommand(&WIFI_SERIAL, AT_QUERY_TIMEOUT);
+        break;
+
+      case 'T':
+        wifi_sendCommand(&WIFI_SERIAL, AT_SET_TIMEOUT);
+        break;
+
+      case 's':
+        wifi_sendCommand(&WIFI_SERIAL, AT_STATUS);
+        break;
+
       case 'w':
-        wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_AP);
+        wifi_sendCommand(&WIFI_SERIAL, AT_AP_MODE);
         delay(1000);
-        wifi_sendCommand(&WIFI_SERIAL, AT_ACCEPT_CONNS);
+        wifi_sendCommand(&WIFI_SERIAL, AT_CREAT_AP);
         delay(1000);
         wifi_sendCommand(&WIFI_SERIAL, AT_MULTI_CONN);
         delay(1000);
@@ -220,6 +232,16 @@ void loop() {
 
       case 'p':
         print_stuff = !print_stuff;
+        break;
+
+      case 'P':
+        USB_SERIAL.println(kami_drone.accel_data.x_off); //-3, -5 62 -50 21 -14
+        USB_SERIAL.println(kami_drone.accel_data.y_off);
+        USB_SERIAL.println(kami_drone.accel_data.z_off);
+
+        USB_SERIAL.println(kami_drone.gyro_data.roll_dot_off);
+        USB_SERIAL.println(kami_drone.gyro_data.pitch_dot_off);
+        USB_SERIAL.println(kami_drone.gyro_data.yaw_dot_off);
         break;
 
       case '+':
