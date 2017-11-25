@@ -62,6 +62,7 @@ enum button_press_t {
   BTN_OPEN_PORT,
   BTN_KILL,
   BTN_GRAPH,
+  BTN_TAKEOFF,
   BTN_MAX
 };
 
@@ -371,77 +372,9 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
   if (msg->button_presses[BTN_KILL])
     mvu_sendHeaderMsg(model, PKT_KILL);
 
-  /*
-  if (msg->button_presses[BTN_RECORD])
-    recordButtonEvent(&model->data_recorder);
+  if (msg->button_presses[BTN_TAKEOFF])
+    mvu_sendHeaderMsg(model, PKT_TAKEOFF);
 
-  if (msg->button_presses[BTN_TRIAL]) {
-
-    if (model->trial_state == TRIAL_ENDED) {
-      mvu_sendStateMsg(model, L_DBL_STANCE);
-      model->trial_state = TRIAL_ONGOING;
-    }
-
-    else if(model->trial_state == TRIAL_ONGOING) {
-      mvu_sendStateMsg(model, LOCKED);
-      model->trial_state = TRIAL_ENDED;
-    }
-
-    recordButtonEvent(&model->data_recorder);
-  }
-
-  if (model->read_data) {
-    mvu_handleData(model);
-  }
-
-  if (msg->button_presses[BTN_FORCE_ACK]) {
-    mvu_forceSync(model);
-    model->read_data = false;
-  }
-
-  if (msg->button_presses[BTN_REQUEST_DATA]) {
-    mvu_sendStartPacket(model);
-    model->read_data = true;
-  }
-
-  if (msg->button_presses[BTN_GET_PARAMS]) {
-    mvu_sendHeaderMsg(model, PKT_GET_PARAMS);
-  }
-
-  if (msg->button_presses[BTN_SET_PARAMS]) {
-    mvu_readParams(msg, model);
-    mvu_sendParamsMsg(model);
-    mvu_sendHeaderMsg(model, PKT_GET_PARAMS);
-  }
-
-  if (msg->button_presses[BTN_MOTOR_TOGGLE]) {
-    mvu_readParams(msg, model);
-    model->parameters[MOTOR_FORCE_OFF] = !(bool) model->rec_params[MOTOR_FORCE_OFF];
-    mvu_sendParamsMsg(model);
-    mvu_sendHeaderMsg(model, PKT_GET_PARAMS);
-  }
-
-  if (msg->button_presses[BTN_ZERO_L_HIP]) {
-      mvu_sendHeaderMsg(model, PKT_CALIBRATE_LHIP);
-  }
-
-  if (msg->button_presses[BTN_ZERO_R_HIP]) {
-      mvu_sendHeaderMsg(model, PKT_CALIBRATE_RHIP);
-  }
-
-  if (msg->button_presses[BTN_UNLOCK]) {
-      mvu_sendStateMsg(model, UNLOCKED);
-  }
-  else if (msg->button_presses[BTN_LOCK]) {
-      mvu_sendStateMsg(model, LOCKED);
-  }
-  else if (msg->button_presses[BTN_L_STEP]) {
-      mvu_sendStateMsg(model, L_DBL_STANCE);
-  }
-  else if (msg->button_presses[BTN_R_STEP]) {
-      mvu_sendStateMsg(model, R_DBL_STANCE);
-  }
-  */
 }
 
 /*----------------------------------------------------------------------------*/
@@ -465,39 +398,6 @@ static void mvu_drawParamTextboxes(const mvu_model_t model, mvu_msg_t msg) {
 
 void mvu_textDisplay(const mvu_model_t model, mvu_msg_t msg) {
   struct nk_context *ctx = model->ctx;
-
-  /*
-  nk_layout_row_dynamic(ctx, 40, 1);
-  char buff[100];
-  sprintf(buff, "State: %s", GED_STATE_STR[model->ged_state]);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-
-  nk_layout_row_dynamic(ctx, 40, 2);
-
-  sprintf(buff, "L Hip Angle: %f", model->l_hip_angle);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-
-  sprintf(buff, "R Hip Angle: %f", model->r_hip_angle);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-
-  sprintf(buff, "L FSR FF: %f", model->l_fsr_ff);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-
-  sprintf(buff, "R FSR FF: %f", model->r_fsr_ff);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-
-  sprintf(buff, "L FSR Heel: %f", model->l_fsr_heel);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-
-  sprintf(buff, "R FSR Heel: %f", model->r_fsr_heel);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-
-  sprintf(buff, "L Knee Angle: %f", model->l_knee_angle);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-
-  sprintf(buff, "R Knee Angle: %f", model->r_knee_angle);
-  nk_label(ctx, buff, NK_TEXT_LEFT);
-  */
 }
 
 void  mvu_view(const mvu_model_t model, mvu_msg_t msg) {
@@ -511,6 +411,9 @@ void  mvu_view(const mvu_model_t model, mvu_msg_t msg) {
   msg->serial_addr[msg->serial_addr_len] = 0;
 
   msg->button_presses[BTN_OPEN_PORT] = multiLabelToggle(ctx, PORT_BUTTON_LABELS, model->port_state);
+
+  nk_layout_row_dynamic(ctx, 50, 1);
+  msg->button_presses[BTN_TAKEOFF] = nk_button_label(ctx, "TAKE OFF");
 
   nk_layout_row_dynamic(ctx, 100, 1);
   msg->button_presses[BTN_KILL] = nk_button_label(ctx, "KILL");

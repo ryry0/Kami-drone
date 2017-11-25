@@ -21,6 +21,8 @@
 #define MOTOR_PIN_4 35
 #define PWM_FREQ 12000
 #define MOTOR_ZERO_SPEED 20
+#define MOTOR_TAKEOFF_SPEED 45
+#define MOTOR_MAX_SPEED 70
 
 #define TEST_PIN1 35
 #define TEST_PIN2 36
@@ -257,7 +259,16 @@ void handlePacket(pkt_generic_t *packet) {
       mtr_disable(&kami_drone.motor3);
       mtr_disable(&kami_drone.motor4);
       break;
+
     case PKT_SET_PARAMS:
+      break;
+
+    case PKT_TAKEOFF:
+      mtr_enable(&kami_drone.motor1);
+      mtr_enable(&kami_drone.motor2);
+      mtr_enable(&kami_drone.motor3);
+      mtr_enable(&kami_drone.motor4);
+      kami_drone.throttle = MOTOR_TAKEOFF_SPEED;
       break;
   }
 }

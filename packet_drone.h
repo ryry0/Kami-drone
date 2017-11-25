@@ -11,7 +11,7 @@ typedef enum pkt_type_e {
   PKT_SET_STATE,
   PKT_CALIBRATE,
   PKT_KILL,
-  TAKE_OFF,
+  PKT_TAKEOFF,
   PKT_SYN         = 0xFF
 } pkt_type_t;
 
