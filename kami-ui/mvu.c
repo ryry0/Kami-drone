@@ -403,7 +403,7 @@ static void mvu_drawPIDPlot(const mvu_model_t model, mvu_msg_t msg) {
 
 static void mvu_drawParamTextboxes(const mvu_model_t model, mvu_msg_t msg) {
   //for (size_t i = 0; i < PKT_PARAM_MAX; ++i) {
-  for (int64_t i = PKT_PARAM_MAX-1; i >= 0; --i) {
+  for (int64_t i = 0; i < PKT_PARAM_MAX; ++i) {
     nk_layout_row_dynamic(model->ctx, 40, 3);
     char value[30];
     sprintf(value, "%f", model->rec_params[i]);
