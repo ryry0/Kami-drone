@@ -109,6 +109,8 @@ typedef struct kami_drone_s {
   uint8_t throttle;
   uint8_t takeoff_throttle;
 
+  uint8_t tcp_conn_loss_index;
+
   bool usb_print;
 
   pkt_generic_t packet;
@@ -163,6 +165,7 @@ void setupDrone() {
   kami_drone.pitch = 0;
   kami_drone.throttle = MOTOR_ZERO_SPEED;
   kami_drone.takeoff_throttle = MOTOR_TAKEOFF_SPEED;
+  kami_drone.tcp_conn_loss_index = 0;
   mtr_init(&kami_drone.motor1, MOTOR_PIN_1);
   mtr_init(&kami_drone.motor2, MOTOR_PIN_2);
   mtr_init(&kami_drone.motor3, MOTOR_PIN_3);
@@ -246,10 +249,41 @@ void loop() {
 void handleWifi(struct kami_drone_s *kami_drone) {
   while (WIFI_SERIAL.available() > 0) {
     uint8_t input_byte = WIFI_SERIAL.read();
+
+    wifiKillOnLoss(kami_drone, input_byte);
+
     pkt_decodeByteHandler(&kami_drone->packet, input_byte, handlePacket);
 #ifdef WIFI_DEBUG
     USB_SERIAL.write(input_byte);
 #endif
+  }
+}
+
+void wifiKillOnLoss(struct kami_drone_s *kami_drone, uint8_t input_byte) {
+  char buff[10] = "CLOSE";
+  switch(kami_drone->tcp_conn_loss_index) {
+    case 0:
+      if (input_byte == buff[0]) kami_drone->tcp_conn_loss_index ++;
+      else kami_drone->tcp_conn_loss_index = 0;
+      break;
+
+    case 1:
+      if (input_byte == buff[1]) kami_drone->tcp_conn_loss_index ++;
+      else kami_drone->tcp_conn_loss_index = 0;
+      break;
+
+    case 2:
+      if (input_byte == buff[2]) kami_drone->tcp_conn_loss_index ++;
+      else kami_drone->tcp_conn_loss_index = 0;
+      break;
+
+    case 3:
+      mtr_disable(&kami_drone->motor1);
+      mtr_disable(&kami_drone->motor2);
+      mtr_disable(&kami_drone->motor3);
+      mtr_disable(&kami_drone->motor4);
+      kami_drone->tcp_conn_loss_index = 0;
+      break;
   }
 }
 
