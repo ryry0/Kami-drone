@@ -8,6 +8,7 @@
 #include "teensy_esp8266.h"
 #include "numerical.h"
 #include "packet.h"
+#include "packet_drone.h"
 
 #define OLED_RESET 15
 #define I2C_SDA 34
@@ -103,6 +104,7 @@ typedef struct kami_drone_s {
   float pitch;
   uint8_t debug_motor_speed;
   bool usb_print;
+  pkt_generic_t packet;
   mtr_drone_t motor1;
   mtr_drone_t motor2;
   mtr_drone_t motor3;
@@ -154,6 +156,7 @@ void setupDrone() {
   mtr_init(&kami_drone.motor2, MOTOR_PIN_2);
   mtr_init(&kami_drone.motor3, MOTOR_PIN_3);
   mtr_init(&kami_drone.motor4, MOTOR_PIN_4);
+  pkt_init((pkt_generic_t *) &kami_drone.packet);
 }
 
 void setup() {
@@ -232,11 +235,18 @@ void loop() {
 
 void handleWifi(struct kami_drone_s *kami_drone) {
   while (WIFI_SERIAL.available() > 0) {
-    uint8_t rec_byte = WIFI_SERIAL.read();
+    uint8_t input_byte = WIFI_SERIAL.read();
+    pkt_decodeByteHandler(&kami_drone->packet, input_byte, handlePacket);
 #ifdef WIFI_DEBUG
-    USB_SERIAL.write(rec_byte);
+    USB_SERIAL.write(input_byte);
 #endif
   }
+}
+
+void handlePacket(pkt_generic_t *packet) {
+  USB_SERIAL.print("tengo packet\n");
+  if (packet->type == PKT_DATA_START)
+    USB_SERIAL.print("weeener\n");
 }
 
 void handleKeyCommands(struct kami_drone_s *kami_drone, uint8_t rec_byte) {
