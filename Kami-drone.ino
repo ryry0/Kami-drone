@@ -249,23 +249,23 @@ void controlLoop() {
 
   //run pid
   if (kami_drone.state != STATE_LANDED) {
-  kami_drone.motor1_correction = 0.5*pid_FeedbackCtrl(
+  kami_drone.motor2_correction = -0.5*pid_FeedbackCtrl(
     (pid_data_t *) &kami_drone.roll_pid,
     kami_drone.roll_commanded,
     kami_drone.roll_shift,
     DELTA_TIME,
     pid_minPIUpdate);
 
-  kami_drone.motor3_correction = -kami_drone.motor1_correction;
+  kami_drone.motor4_correction = -kami_drone.motor2_correction;
 
-  kami_drone.motor2_correction = 0.5*pid_FeedbackCtrl(
+  kami_drone.motor1_correction = -0.5*pid_FeedbackCtrl(
     (pid_data_t *) &kami_drone.pitch_pid,
     kami_drone.pitch_commanded,
     kami_drone.pitch_shift,
     DELTA_TIME,
     pid_minPIUpdate);
 
-  kami_drone.motor4_correction = -kami_drone.motor2_correction;
+  kami_drone.motor3_correction = -kami_drone.motor1_correction;
   }
 
   digitalWriteFast(TEST_PIN2, LOW);
