@@ -36,6 +36,8 @@
 #define USB_SERIAL  Serial
 #define WIFI_DEBUG
 
+const float inv_sqrt_2 = 1/sqrt(2);
+
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
@@ -105,6 +107,9 @@ typedef struct kami_drone_s {
   gyro_data_t gyro_data;
   float roll;
   float pitch;
+
+  float roll_shift;
+  float pitch_shift;
 
   uint8_t throttle;
   uint8_t takeoff_throttle;
@@ -207,13 +212,17 @@ void controlLoop() {
     kami_drone.accel_data.pitch,
     kami_drone.pitch + ((kami_drone.gyro_data.raw_pitch_dot/GYRO_SCALING)*DELTA_TIME));
 
+
+  kami_drone.roll_shift = -inv_sqrt_2*(-kami_drone.roll -
+  kami_drone.pitch);
+
+  kami_drone.pitch_shift = -inv_sqrt_2*(kami_drone.roll -
+  kami_drone.pitch);
+
   digitalWriteFast(TEST_PIN2, LOW);
 }
 
 void loop() {
-  static int i = 0;
-  static bool print_stuff = false;
-
   accel_read(&kami_drone.accel_data);
   gyro_read(&kami_drone.gyro_data);
 
@@ -226,11 +235,16 @@ void loop() {
   display.clearDisplay();
   */
 
-  if (print_stuff) {
+  if (kami_drone.usb_print) {
     USB_SERIAL.print(kami_drone.roll);
     USB_SERIAL.print(" ");
     USB_SERIAL.print(kami_drone.pitch);
+    USB_SERIAL.print(" ");
+    USB_SERIAL.print(kami_drone.roll_shift);
+    USB_SERIAL.print(" ");
+    USB_SERIAL.print(kami_drone.pitch_shift);
     USB_SERIAL.print("\n");
+    delay(10);
   }
 
   if (USB_SERIAL.available() > 0) {
