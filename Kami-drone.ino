@@ -22,9 +22,9 @@
 #define MOTOR_PIN_4 35
 #define PWM_FREQ 12000
 #define MOTOR_ZERO_CORRECTION -70
-#define MOTOR_ZERO_SPEED 24
-#define MOTOR_TAKEOFF_SPEED 45
-#define MOTOR_MAX_SPEED 70
+#define MOTOR_ZERO_SPEED 0
+#define MOTOR_TAKEOFF_SPEED 450
+#define MOTOR_MAX_SPEED 4095
 
 #define TEST_PIN1 35
 #define TEST_PIN2 36
@@ -116,8 +116,8 @@ typedef struct kami_drone_s {
   float roll_commanded;
   float pitch_commanded;
 
-  uint8_t throttle;
-  uint8_t takeoff_throttle;
+  uint16_t throttle;
+  uint16_t takeoff_throttle;
 
   uint8_t tcp_conn_loss_index;
 
@@ -156,6 +156,7 @@ void setupPWM() {
   pinMode(MOTOR_PIN_3, OUTPUT);
   pinMode(MOTOR_PIN_4, OUTPUT);
   analogWriteFrequency(MOTOR_PIN_1, PWM_FREQ);
+  analogWriteResolution(12);
 }
 
 void setupWire() {
@@ -543,18 +544,39 @@ void handleKeyCommands(struct kami_drone_s *kami_drone, uint8_t rec_byte) {
       USB_SERIAL.println(kami_drone->gyro_data.yaw_dot_off);
       break;
 
+    case '-':
+      kami_drone->throttle -= 100;
+      USB_SERIAL.println(kami_drone->throttle);
+      break;
+
     case '+':
+      kami_drone->throttle += 100;
+      USB_SERIAL.println(kami_drone->throttle);
+      break;
+
+    case '}':
       kami_drone->throttle += 5;
       USB_SERIAL.println(kami_drone->throttle);
       break;
 
-    case '-':
+    case '{':
       kami_drone->throttle -= 5;
       USB_SERIAL.println(kami_drone->throttle);
       break;
 
+
+    case ']':
+      kami_drone->throttle += 1;
+      USB_SERIAL.println(kami_drone->throttle);
+      break;
+
+    case '[':
+      kami_drone->throttle -= 1;
+      USB_SERIAL.println(kami_drone->throttle);
+      break;
+
     case 'M':
-      kami_drone->throttle = 255;
+      kami_drone->throttle = MOTOR_MAX_SPEED;
       USB_SERIAL.println(kami_drone->throttle);
       break;
 
