@@ -68,7 +68,7 @@ typedef struct kami_drone_s {
 volatile kami_drone_t kami_drone;
 
 void setupSerial() {
-  USB_SERIAL.begin(9600);
+  USB_SERIAL.begin(115200);
   WIFI_SERIAL.begin(115200);
 }
 
