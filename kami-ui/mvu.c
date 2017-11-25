@@ -144,7 +144,11 @@ static void mvu_clearMessage(mvu_msg_t msg) {
 }
 
 mvu_msg_t mvu_createMessage() {
-  return malloc(sizeof(struct mvu_msg_s));
+  char * address = "192.168.4.1";
+  mvu_msg_t temp = malloc(sizeof(struct mvu_msg_s));
+  strcpy(temp->serial_addr, address);
+  temp->serial_addr_len = strlen(address);
+  return temp;
 }
 
 void mvu_destroyMessage(mvu_msg_t msg) {
