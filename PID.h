@@ -13,6 +13,9 @@
 #define PID_BUFFER_SIZE 6
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /** \brief This data structure represents the PID, can create multiple PIDs per
  * motor */
 typedef struct pid_data_t {
@@ -51,8 +54,8 @@ void pid_init(pid_data_t *pid,
     float proportional_gain,
     float integral_gain,
     float derivative_gain,
-    float max_integral_guard,
-    float min_integral_guard);
+    float min_integral_guard,
+    float max_integral_guard);
 
 /**
  * \brief Set the constants of the PID.
@@ -157,4 +160,8 @@ float pid_FeedbackCtrl(pid_data_t *pid, float setpoint,
 float pid_feedforwardFeedbackCtrl(pid_data_t *pid, float setpoint,
     float sensor, float dt, pid_method_t method);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif
