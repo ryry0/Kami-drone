@@ -10,6 +10,7 @@ typedef enum pkt_type_e {
   PKT_GET_PARAMS,
   PKT_SET_STATE,
   PKT_CALIBRATE,
+  PKT_QUERY,
   PKT_KILL,
   PKT_TAKEOFF,
   PKT_SYN         = 0xFF

@@ -217,8 +217,18 @@ void setup() {
   //-----------------
   accel_init();
   gyro_init();
+  /*
   accel_calibrate(&kami_drone.accel_data);
   gyro_calibrate(&kami_drone.gyro_data);
+  */
+  kami_drone.accel_data.x_off = -3;
+  kami_drone.accel_data.y_off = -5;
+  kami_drone.accel_data.z_off = 62;
+
+  kami_drone.gyro_data.roll_dot_off = -50;
+  kami_drone.gyro_data.pitch_dot_off = 21;
+  kami_drone.gyro_data.yaw_dot_off = -14;
+
   control_timer.begin(controlLoop, LOOP_CLOSURE_US);
 }
 
@@ -397,6 +407,33 @@ void handlePacket(pkt_generic_t *packet) {
       break;
 
     case PKT_GET_PARAMS:
+      break;
+
+    case PKT_CALIBRATE:
+      break;
+
+    case PKT_QUERY:
+      mtr_enable(&kami_drone.motor1);
+      mtr_enable(&kami_drone.motor2);
+      mtr_enable(&kami_drone.motor3);
+      mtr_enable(&kami_drone.motor4);
+
+      mtr_setSpeed(&kami_drone.motor1, 25);
+      mtr_setSpeed(&kami_drone.motor2, 25);
+      mtr_setSpeed(&kami_drone.motor3, 25);
+      mtr_setSpeed(&kami_drone.motor4, 25);
+
+      delay(500);
+
+      mtr_setSpeed(&kami_drone.motor1, MOTOR_ZERO_SPEED);
+      mtr_setSpeed(&kami_drone.motor2, MOTOR_ZERO_SPEED);
+      mtr_setSpeed(&kami_drone.motor3, MOTOR_ZERO_SPEED);
+      mtr_setSpeed(&kami_drone.motor4, MOTOR_ZERO_SPEED);
+
+      mtr_disable(&kami_drone.motor1);
+      mtr_disable(&kami_drone.motor2);
+      mtr_disable(&kami_drone.motor3);
+      mtr_disable(&kami_drone.motor4);
       break;
 
     case PKT_TAKEOFF:

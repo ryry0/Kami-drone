@@ -65,6 +65,8 @@ enum button_press_t {
   BTN_TAKEOFF,
   BTN_SET_PARAMS,
   BTN_GET_PARAMS,
+  BTN_QUERY,
+  BTN_CALIBRATE,
   BTN_SYNC_TEXTBOX,
   BTN_MAX
 };
@@ -382,6 +384,15 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
     mvu_sendHeaderMsg(model, PKT_GET_PARAMS);
   }
 
+
+  if (msg->button_presses[BTN_CALIBRATE]) {
+    mvu_sendHeaderMsg(model, PKT_CALIBRATE);
+  }
+
+  if (msg->button_presses[BTN_QUERY]) {
+    mvu_sendHeaderMsg(model, PKT_QUERY);
+  }
+
   if (msg->button_presses[BTN_SET_PARAMS]) {
     mvu_readParams(msg, model);
     mvu_sendParamsMsg(model);
@@ -428,6 +439,12 @@ void  mvu_view(const mvu_model_t model, mvu_msg_t msg) {
   msg->serial_addr[msg->serial_addr_len] = 0;
 
   msg->button_presses[BTN_OPEN_PORT] = multiLabelToggle(ctx, PORT_BUTTON_LABELS, model->port_state);
+
+  nk_layout_row_dynamic(ctx, 100, 1);
+  msg->button_presses[BTN_QUERY] = nk_button_label(ctx, "QUERY");
+
+  nk_layout_row_dynamic(ctx, 100, 1);
+  msg->button_presses[BTN_CALIBRATE] = nk_button_label(ctx, "CALIBRATE");
 
   nk_layout_row_dynamic(ctx, 100, 1);
   msg->button_presses[BTN_TAKEOFF] = nk_button_label(ctx, "TAKE OFF");
