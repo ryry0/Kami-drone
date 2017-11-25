@@ -60,6 +60,42 @@ Adafruit_SSD1306 display(OLED_RESET);
   Controller?
 **/
 
+/***************************************************************************************/
+typedef struct mtr_drone_s {
+  bool enabled;
+  uint8_t pin;
+  uint8_t speed;
+} mtr_drone_t;
+
+void mtr_setSpeed(volatile mtr_drone_t *mtr, uint8_t speed) {
+  if (mtr->enabled)
+    mtr->speed = speed;
+  else
+    mtr->speed = MOTOR_ZERO_SPEED;
+
+  analogWrite(mtr->pin, mtr->speed);
+}
+
+void mtr_init(volatile mtr_drone_t *mtr, uint8_t pin) {
+  mtr->pin = pin;
+  mtr_disable(mtr);
+  mtr_setSpeed(mtr, MOTOR_ZERO_SPEED);
+}
+
+void mtr_toggle(volatile mtr_drone_t *mtr) {
+  mtr->enabled = !mtr->enabled;
+}
+
+void mtr_enable(volatile mtr_drone_t *mtr) {
+  mtr->enabled = true;
+}
+
+void mtr_disable(volatile mtr_drone_t *mtr) {
+  mtr->enabled = false;
+}
+
+/***************************************************************************************/
+
 typedef struct kami_drone_s {
   accel_data_t accel_data;
   gyro_data_t gyro_data;
@@ -67,11 +103,12 @@ typedef struct kami_drone_s {
   float pitch;
   uint8_t debug_motor_speed;
   bool usb_print;
-  bool motor1_enabled;
-  bool motor2_enabled;
-  bool motor3_enabled;
-  bool motor4_enabled;
+  mtr_drone_t motor1;
+  mtr_drone_t motor2;
+  mtr_drone_t motor3;
+  mtr_drone_t motor4;
 } kami_drone_t;
+
 
 volatile kami_drone_t kami_drone;
 
@@ -110,13 +147,13 @@ void setupWifi() {
 
 void setupDrone() {
   kami_drone.usb_print = false;
-  kami_drone.motor1_enabled = false;
-  kami_drone.motor2_enabled = false;
-  kami_drone.motor3_enabled = false;
-  kami_drone.motor4_enabled = false;
   kami_drone.roll = 0;
   kami_drone.pitch = 0;
   kami_drone.debug_motor_speed = MOTOR_ZERO_SPEED;
+  mtr_init(&kami_drone.motor1, MOTOR_PIN_1);
+  mtr_init(&kami_drone.motor2, MOTOR_PIN_2);
+  mtr_init(&kami_drone.motor3, MOTOR_PIN_3);
+  mtr_init(&kami_drone.motor4, MOTOR_PIN_4);
 }
 
 void setup() {
@@ -184,21 +221,10 @@ void loop() {
     handleKeyCommands((kami_drone_t *) &kami_drone, rec_byte);
   }
 
-  if (kami_drone.motor1_enabled)
-    analogWrite(MOTOR_PIN_1, kami_drone.debug_motor_speed);
-  else analogWrite(MOTOR_PIN_1, MOTOR_ZERO_SPEED);
-
-  if (kami_drone.motor2_enabled)
-    analogWrite(MOTOR_PIN_2, kami_drone.debug_motor_speed);
-  else analogWrite(MOTOR_PIN_2, MOTOR_ZERO_SPEED);
-
-  if (kami_drone.motor3_enabled)
-    analogWrite(MOTOR_PIN_3, kami_drone.debug_motor_speed);
-  else analogWrite(MOTOR_PIN_3, MOTOR_ZERO_SPEED);
-
-  if (kami_drone.motor4_enabled)
-    analogWrite(MOTOR_PIN_4, kami_drone.debug_motor_speed);
-  else analogWrite(MOTOR_PIN_4, MOTOR_ZERO_SPEED);
+  mtr_setSpeed(&kami_drone.motor1, kami_drone.debug_motor_speed);
+  mtr_setSpeed(&kami_drone.motor2, kami_drone.debug_motor_speed);
+  mtr_setSpeed(&kami_drone.motor3, kami_drone.debug_motor_speed);
+  mtr_setSpeed(&kami_drone.motor4, kami_drone.debug_motor_speed);
 
   while (WIFI_SERIAL.available() > 0) {
     uint8_t rec_byte = WIFI_SERIAL.read();
@@ -209,37 +235,22 @@ void loop() {
   delay(10);
 }
 
-extern "C" int main(void) {
-  pinMode(13, OUTPUT);
-  pinMode(TEST_PIN1, OUTPUT);
-  pinMode(TEST_PIN2, OUTPUT);
-  digitalWriteFast(13, HIGH);
-  delay(500);
-  digitalWriteFast(13, LOW);
-  delay(500);
-  setup();
-  while (1) {
-    loop();
-    yield();
-  }
-}
-
-void handleKeyCommands(kami_drone_t *kami_drone, uint8_t rec_byte) {
+void handleKeyCommands(struct kami_drone_s *kami_drone, uint8_t rec_byte) {
   switch(rec_byte) {
     case '1':
-      kami_drone->motor1_enabled = !kami_drone->motor1_enabled;
+      mtr_toggle(&kami_drone->motor1);
       break;
 
     case '2':
-      kami_drone->motor2_enabled = !kami_drone->motor2_enabled;
+      mtr_toggle(&kami_drone->motor2);
       break;
 
     case '3':
-      kami_drone->motor3_enabled = !kami_drone->motor3_enabled;
+      mtr_toggle(&kami_drone->motor3);
       break;
 
     case '4':
-      kami_drone->motor4_enabled = !kami_drone->motor4_enabled;
+      mtr_toggle(&kami_drone->motor4);
       break;
 
     case 'a':
@@ -329,3 +340,19 @@ void handleKeyCommands(kami_drone_t *kami_drone, uint8_t rec_byte) {
       break;
   }
 }
+
+extern "C" int main(void) {
+  pinMode(13, OUTPUT);
+  pinMode(TEST_PIN1, OUTPUT);
+  pinMode(TEST_PIN2, OUTPUT);
+  digitalWriteFast(13, HIGH);
+  delay(500);
+  digitalWriteFast(13, LOW);
+  delay(500);
+  setup();
+  while (1) {
+    loop();
+    yield();
+  }
+}
+
