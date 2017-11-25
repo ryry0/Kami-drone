@@ -63,6 +63,9 @@ enum button_press_t {
   BTN_KILL,
   BTN_GRAPH,
   BTN_TAKEOFF,
+  BTN_SET_PARAMS,
+  BTN_GET_PARAMS,
+  BTN_SYNC_TEXTBOX,
   BTN_MAX
 };
 
@@ -250,10 +253,10 @@ static void mvu_handleData(mvu_model_t model) {
 
       mvu_recordData(model);
       break;
+      */
     case PKT_GET_PARAMS:
       mvu_handleParams(model);
       break;
-      */
   }
 
   pkt_clear(&model->input_packet);
@@ -327,14 +330,14 @@ static void mvu_sendParamsMsg(mvu_model_t model) {
   pkt_set_params_t *set_params_payload = pkt_interp(pkt_set_params_t,
       params_message);
 
-  mvu_forceSync(model);
+  //mvu_forceSync(model);
   for (size_t i = 0; i < PKT_PARAM_MAX; ++i) {
     set_params_payload->float_params[i] = model->parameters[i];
   }
 
   mvu_sendPacket(model, &params_message);
   //mvu_forceSync(model);
-  mvu_sendStartPacket(model);
+  //mvu_sendStartPacket(model);
 }
 
 
@@ -374,6 +377,16 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
 
   if (msg->button_presses[BTN_TAKEOFF])
     mvu_sendHeaderMsg(model, PKT_TAKEOFF);
+
+  if (msg->button_presses[BTN_GET_PARAMS]) {
+    mvu_sendHeaderMsg(model, PKT_GET_PARAMS);
+  }
+
+  if (msg->button_presses[BTN_SET_PARAMS]) {
+    mvu_readParams(msg, model);
+    mvu_sendParamsMsg(model);
+    mvu_sendHeaderMsg(model, PKT_GET_PARAMS);
+  }
 
 }
 
@@ -417,6 +430,23 @@ void  mvu_view(const mvu_model_t model, mvu_msg_t msg) {
 
   nk_layout_row_dynamic(ctx, 100, 1);
   msg->button_presses[BTN_KILL] = nk_button_label(ctx, "KILL");
+
+
+  nk_layout_row_dynamic(ctx, 40, 3);
+
+  msg->button_presses[BTN_GET_PARAMS] = nk_button_label(ctx, "Get Parameters");
+  msg->button_presses[BTN_SYNC_TEXTBOX] =
+    nk_button_label(ctx, "Sync Textboxes");
+  msg->button_presses[BTN_SET_PARAMS] = nk_button_label(ctx, "Set Parameters");
+
+  mvu_drawParamTextboxes(model, msg);
+
+  if(msg->button_presses[BTN_SYNC_TEXTBOX]) {
+    for (size_t i = 0; i < PKT_PARAM_MAX; ++i) {
+      sprintf(msg->param_str[i], "%f", model->rec_params[i]);
+      msg->param_str_lens[i] = strlen(msg->param_str[i]);
+    }
+  }
 
   /*
   tab selection row
@@ -464,22 +494,6 @@ void  mvu_view(const mvu_model_t model, mvu_msg_t msg) {
       break;
 
     case TAB_PARAMETERS:
-
-      nk_layout_row_dynamic(ctx, 40, 3);
-
-      msg->button_presses[BTN_GET_PARAMS] = nk_button_label(ctx, "Get Parameters");
-      msg->button_presses[BTN_SYNC_TEXTBOX] =
-        nk_button_label(ctx, "Sync Textboxes");
-      msg->button_presses[BTN_SET_PARAMS] = nk_button_label(ctx, "Set Parameters");
-
-      mvu_drawParamTextboxes(model, msg);
-
-      if(msg->button_presses[BTN_SYNC_TEXTBOX]) {
-        for (size_t i = 0; i < PKT_PARAM_MAX; ++i) {
-          sprintf(msg->param_str[i], "%f", model->rec_params[i]);
-          msg->param_str_lens[i] = strlen(msg->param_str[i]);
-        }
-      }
       break;
 
     case TAB_STATE:

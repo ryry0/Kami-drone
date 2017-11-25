@@ -20,7 +20,7 @@
 #define MOTOR_PIN_3 38
 #define MOTOR_PIN_4 35
 #define PWM_FREQ 12000
-#define MOTOR_ZERO_SPEED 20
+#define MOTOR_ZERO_SPEED 24
 #define MOTOR_TAKEOFF_SPEED 45
 #define MOTOR_MAX_SPEED 70
 
@@ -107,6 +107,7 @@ typedef struct kami_drone_s {
   float pitch;
 
   uint8_t throttle;
+  uint8_t takeoff_throttle;
 
   bool usb_print;
 
@@ -161,6 +162,7 @@ void setupDrone() {
   kami_drone.roll = 0;
   kami_drone.pitch = 0;
   kami_drone.throttle = MOTOR_ZERO_SPEED;
+  kami_drone.takeoff_throttle = MOTOR_TAKEOFF_SPEED;
   mtr_init(&kami_drone.motor1, MOTOR_PIN_1);
   mtr_init(&kami_drone.motor2, MOTOR_PIN_2);
   mtr_init(&kami_drone.motor3, MOTOR_PIN_3);
@@ -252,6 +254,7 @@ void handleWifi(struct kami_drone_s *kami_drone) {
 }
 
 void handlePacket(pkt_generic_t *packet) {
+  pkt_set_params_t *param_payload = pkt_interpPtr(pkt_set_params_t, packet);
   switch(packet->type) {
     case PKT_KILL:
       mtr_disable(&kami_drone.motor1);
@@ -261,6 +264,10 @@ void handlePacket(pkt_generic_t *packet) {
       break;
 
     case PKT_SET_PARAMS:
+      kami_drone.takeoff_throttle = param_payload->float_params[PKT_TAKEOFF_THROTTLE];
+      break;
+
+    case PKT_GET_PARAMS:
       break;
 
     case PKT_TAKEOFF:
@@ -268,7 +275,7 @@ void handlePacket(pkt_generic_t *packet) {
       mtr_enable(&kami_drone.motor2);
       mtr_enable(&kami_drone.motor3);
       mtr_enable(&kami_drone.motor4);
-      kami_drone.throttle = MOTOR_TAKEOFF_SPEED;
+      kami_drone.throttle = kami_drone.takeoff_throttle;
       break;
   }
 }
