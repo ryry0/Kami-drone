@@ -9,6 +9,7 @@
 #include "numerical.h"
 #include "packet.h"
 #include "packet_drone.h"
+#include "Kami-drone.h"
 
 #define OLED_RESET 15
 #define I2C_SDA 34
@@ -102,9 +103,15 @@ typedef struct kami_drone_s {
   gyro_data_t gyro_data;
   float roll;
   float pitch;
-  uint8_t debug_motor_speed;
+
+  uint8_t throttle;
+
   bool usb_print;
+
   pkt_generic_t packet;
+
+  kami_drone_state_t state;
+
   mtr_drone_t motor1;
   mtr_drone_t motor2;
   mtr_drone_t motor3;
@@ -151,7 +158,7 @@ void setupDrone() {
   kami_drone.usb_print = false;
   kami_drone.roll = 0;
   kami_drone.pitch = 0;
-  kami_drone.debug_motor_speed = MOTOR_ZERO_SPEED;
+  kami_drone.throttle = MOTOR_ZERO_SPEED;
   mtr_init(&kami_drone.motor1, MOTOR_PIN_1);
   mtr_init(&kami_drone.motor2, MOTOR_PIN_2);
   mtr_init(&kami_drone.motor3, MOTOR_PIN_3);
@@ -224,13 +231,12 @@ void loop() {
     handleKeyCommands((kami_drone_t *) &kami_drone, rec_byte);
   }
 
-  mtr_setSpeed(&kami_drone.motor1, kami_drone.debug_motor_speed);
-  mtr_setSpeed(&kami_drone.motor2, kami_drone.debug_motor_speed);
-  mtr_setSpeed(&kami_drone.motor3, kami_drone.debug_motor_speed);
-  mtr_setSpeed(&kami_drone.motor4, kami_drone.debug_motor_speed);
+  mtr_setSpeed(&kami_drone.motor1, kami_drone.throttle);
+  mtr_setSpeed(&kami_drone.motor2, kami_drone.throttle);
+  mtr_setSpeed(&kami_drone.motor3, kami_drone.throttle);
+  mtr_setSpeed(&kami_drone.motor4, kami_drone.throttle);
 
   handleWifi((kami_drone_t *) &kami_drone);
-  delay(10);
 }
 
 void handleWifi(struct kami_drone_s *kami_drone) {
@@ -250,6 +256,8 @@ void handlePacket(pkt_generic_t *packet) {
       mtr_disable(&kami_drone.motor2);
       mtr_disable(&kami_drone.motor3);
       mtr_disable(&kami_drone.motor4);
+      break;
+    case PKT_SET_PARAMS:
       break;
   }
 }
@@ -334,28 +342,28 @@ void handleKeyCommands(struct kami_drone_s *kami_drone, uint8_t rec_byte) {
       break;
 
     case '+':
-      kami_drone->debug_motor_speed += 5;
-      USB_SERIAL.println(kami_drone->debug_motor_speed);
+      kami_drone->throttle += 5;
+      USB_SERIAL.println(kami_drone->throttle);
       break;
 
     case '-':
-      kami_drone->debug_motor_speed -= 5;
-      USB_SERIAL.println(kami_drone->debug_motor_speed);
+      kami_drone->throttle -= 5;
+      USB_SERIAL.println(kami_drone->throttle);
       break;
 
     case 'M':
-      kami_drone->debug_motor_speed = 255;
-      USB_SERIAL.println(kami_drone->debug_motor_speed);
+      kami_drone->throttle = 255;
+      USB_SERIAL.println(kami_drone->throttle);
       break;
 
     case 'm':
-      kami_drone->debug_motor_speed = 0;
-      USB_SERIAL.println(kami_drone->debug_motor_speed);
+      kami_drone->throttle = 0;
+      USB_SERIAL.println(kami_drone->throttle);
       break;
 
     case 'z':
-      kami_drone->debug_motor_speed = MOTOR_ZERO_SPEED;
-      USB_SERIAL.println(kami_drone->debug_motor_speed);
+      kami_drone->throttle = MOTOR_ZERO_SPEED;
+      USB_SERIAL.println(kami_drone->throttle);
       break;
   }
 }
