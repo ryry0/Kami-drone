@@ -63,18 +63,17 @@ Adafruit_SSD1306 display(OLED_RESET);
 typedef struct kami_drone_s {
   accel_data_t accel_data;
   gyro_data_t gyro_data;
-  bool usb_print;
   float roll;
   float pitch;
+  uint8_t debug_motor_speed;
+  bool usb_print;
+  bool motor1_enabled;
+  bool motor2_enabled;
+  bool motor3_enabled;
+  bool motor4_enabled;
 } kami_drone_t;
 
-volatile kami_drone_t kami_drone = {
-  .accel_data = {0},
-  .gyro_data = {0},
-  .usb_print = false,
-  .roll = 0,
-  .pitch = 0
-};
+volatile kami_drone_t kami_drone;
 
 void setupSerial() {
   USB_SERIAL.begin(115200);
@@ -109,11 +108,23 @@ void setupWifi() {
 
 }
 
+void setupDrone() {
+  kami_drone.usb_print = false;
+  kami_drone.motor1_enabled = false;
+  kami_drone.motor2_enabled = false;
+  kami_drone.motor3_enabled = false;
+  kami_drone.motor4_enabled = false;
+  kami_drone.roll = 0;
+  kami_drone.pitch = 0;
+  kami_drone.debug_motor_speed = MOTOR_ZERO_SPEED;
+}
+
 void setup() {
   //-----------------
   setupSerial();
   setupWire();
   setupPWM();
+  setupDrone();
   //setupDisplay();
 
   // init done
@@ -148,11 +159,6 @@ void controlLoop() {
 void loop() {
   static int i = 0;
   static bool print_stuff = false;
-  static bool motor1_on = false;
-  static bool motor2_on = false;
-  static bool motor3_on = false;
-  static bool motor4_on = false;
-  static uint8_t motor_speed = MOTOR_ZERO_SPEED;
 
   accel_read(&kami_drone.accel_data);
   gyro_read(&kami_drone.gyro_data);
@@ -175,19 +181,23 @@ void loop() {
 
   if (USB_SERIAL.available() > 0) {
     uint8_t rec_byte = USB_SERIAL.read();
-    handleKeyCommands(rec_byte);
+    handleKeyCommands((kami_drone_t *) &kami_drone, rec_byte);
   }
 
-  if (motor1_on) analogWrite(MOTOR_PIN_1, motor_speed);
+  if (kami_drone.motor1_enabled)
+    analogWrite(MOTOR_PIN_1, kami_drone.debug_motor_speed);
   else analogWrite(MOTOR_PIN_1, MOTOR_ZERO_SPEED);
 
-  if (motor2_on) analogWrite(MOTOR_PIN_2, motor_speed);
+  if (kami_drone.motor2_enabled)
+    analogWrite(MOTOR_PIN_2, kami_drone.debug_motor_speed);
   else analogWrite(MOTOR_PIN_2, MOTOR_ZERO_SPEED);
 
-  if (motor3_on) analogWrite(MOTOR_PIN_3, motor_speed);
+  if (kami_drone.motor3_enabled)
+    analogWrite(MOTOR_PIN_3, kami_drone.debug_motor_speed);
   else analogWrite(MOTOR_PIN_3, MOTOR_ZERO_SPEED);
 
-  if (motor4_on) analogWrite(MOTOR_PIN_4, motor_speed);
+  if (kami_drone.motor4_enabled)
+    analogWrite(MOTOR_PIN_4, kami_drone.debug_motor_speed);
   else analogWrite(MOTOR_PIN_4, MOTOR_ZERO_SPEED);
 
   while (WIFI_SERIAL.available() > 0) {
@@ -214,22 +224,22 @@ extern "C" int main(void) {
   }
 }
 
-void handleKeyCommands(uint8_t rec_byte) {
+void handleKeyCommands(kami_drone_t *kami_drone, uint8_t rec_byte) {
   switch(rec_byte) {
     case '1':
-      motor1_on = !motor1_on;
+      kami_drone->motor1_enabled = !kami_drone->motor1_enabled;
       break;
 
     case '2':
-      motor2_on = !motor2_on;
+      kami_drone->motor2_enabled = !kami_drone->motor2_enabled;
       break;
 
     case '3':
-      motor3_on = !motor3_on;
+      kami_drone->motor3_enabled = !kami_drone->motor3_enabled;
       break;
 
     case '4':
-      motor4_on = !motor4_on;
+      kami_drone->motor4_enabled = !kami_drone->motor4_enabled;
       break;
 
     case 'a':
@@ -280,42 +290,42 @@ void handleKeyCommands(uint8_t rec_byte) {
       break;
 
     case 'p':
-      print_stuff = !print_stuff;
+      kami_drone->usb_print = !kami_drone->usb_print;
       break;
 
     case 'P':
-      USB_SERIAL.println(kami_drone.accel_data.x_off); //-3, -5 62 -50 21 -14
-      USB_SERIAL.println(kami_drone.accel_data.y_off);
-      USB_SERIAL.println(kami_drone.accel_data.z_off);
+      USB_SERIAL.println(kami_drone->accel_data.x_off); //-3, -5 62 -50 21 -14
+      USB_SERIAL.println(kami_drone->accel_data.y_off);
+      USB_SERIAL.println(kami_drone->accel_data.z_off);
 
-      USB_SERIAL.println(kami_drone.gyro_data.roll_dot_off);
-      USB_SERIAL.println(kami_drone.gyro_data.pitch_dot_off);
-      USB_SERIAL.println(kami_drone.gyro_data.yaw_dot_off);
+      USB_SERIAL.println(kami_drone->gyro_data.roll_dot_off);
+      USB_SERIAL.println(kami_drone->gyro_data.pitch_dot_off);
+      USB_SERIAL.println(kami_drone->gyro_data.yaw_dot_off);
       break;
 
     case '+':
-      motor_speed += 5;
-      USB_SERIAL.println(motor_speed);
+      kami_drone->debug_motor_speed += 5;
+      USB_SERIAL.println(kami_drone->debug_motor_speed);
       break;
 
     case '-':
-      motor_speed -= 5;
-      USB_SERIAL.println(motor_speed);
+      kami_drone->debug_motor_speed -= 5;
+      USB_SERIAL.println(kami_drone->debug_motor_speed);
       break;
 
     case 'M':
-      motor_speed = 255;
-      USB_SERIAL.println(motor_speed);
+      kami_drone->debug_motor_speed = 255;
+      USB_SERIAL.println(kami_drone->debug_motor_speed);
       break;
 
     case 'm':
-      motor_speed = 0;
-      USB_SERIAL.println(motor_speed);
+      kami_drone->debug_motor_speed = 0;
+      USB_SERIAL.println(kami_drone->debug_motor_speed);
       break;
 
     case 'z':
-      motor_speed = MOTOR_ZERO_SPEED;
-      USB_SERIAL.println(motor_speed);
+      kami_drone->debug_motor_speed = MOTOR_ZERO_SPEED;
+      USB_SERIAL.println(kami_drone->debug_motor_speed);
       break;
   }
 }
