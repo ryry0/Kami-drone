@@ -30,6 +30,7 @@
 #define I2C_FASTMODE 400000
 #define WIFI_SERIAL Serial1
 #define USB_SERIAL  Serial
+#define WIFI_DEBUG
 
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
@@ -286,7 +287,9 @@ void loop() {
 
   while (WIFI_SERIAL.available() > 0) {
     uint8_t rec_byte = WIFI_SERIAL.read();
+#ifdef WIFI_DEBUG
     USB_SERIAL.write(rec_byte);
+#endif
   }
   delay(10);
 }
