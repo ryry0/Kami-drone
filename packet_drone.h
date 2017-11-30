@@ -6,6 +6,7 @@ typedef enum pkt_type_e {
   PKT_ACK         = 0x0A,
   PKT_DATA_START,
   PKT_LOG_PARAMS,
+  PKT_COMMAND,
   PKT_SET_PARAMS,
   PKT_GET_PARAMS,
   PKT_SET_STATE,
@@ -51,6 +52,13 @@ typedef pkt_log_params_t pkt_get_params_t;
 typedef struct {
   uint8_t state;
 } pkt_set_state_t;
+
+/*----------------------------------------------------------------------------*/
+typedef struct {
+  float roll_commanded;
+  float pitch_commanded;
+  uint16_t throttle_commanded;
+} pkt_command_t;
 
 /*----------------------------------------------------------------------------*/
 typedef struct {
