@@ -111,6 +111,7 @@ struct mvu_model_s {
   tcp_connection_t tcp_conn;
 
   bool read_data;
+  bool space_pressed;
 
   float rec_params[PKT_PARAM_MAX]; //parameters recorded from the chip
   //parameters to send - may possibly not match rec_params
@@ -177,6 +178,7 @@ bool mvu_initModel(mvu_model_t model, struct nk_context *ctx) {
   pkt_init(&model->input_packet);
 
   model->read_data = true;
+  model->space_pressed = false;
   model->tcp_conn = tcp_create();
 
   return true;
@@ -188,6 +190,10 @@ void mvu_destroyModel(mvu_model_t model) {
   }
   tcp_destroy(model->tcp_conn);
   free(model);
+}
+
+void mvu_setSpace(mvu_model_t model, bool space_pressed) {
+  model->space_pressed = space_pressed;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -374,7 +380,7 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
   if (tcp_getSocket(model->tcp_conn) == SOCKET_ERROR)
     return;
 
-  if (msg->button_presses[BTN_KILL])
+  if (msg->button_presses[BTN_KILL] || model->space_pressed)
     mvu_sendHeaderMsg(model, PKT_KILL);
 
   if (msg->button_presses[BTN_TAKEOFF])
@@ -400,6 +406,8 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model) {
   }
 
   /* make this nonblocking hopefully somehow
+  struct nk_input *in = &model->ctx->input;
+  if (nk_input_is_key_released(in, )
   if (model->port_state == PORT_OPEN)
     mvu_handleData(model);
     */

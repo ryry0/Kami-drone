@@ -130,6 +130,13 @@ int main(int argc, char* argv[])
     while (SDL_PollEvent(&evt)) {
       if (evt.type == SDL_QUIT) goto cleanup;
       nk_sdl_handle_event(&evt);
+      if (evt.type == SDL_KEYDOWN)
+        if (evt.key.keysym.sym == SDLK_SPACE)
+          mvu_setSpace(model, true);
+
+      if (evt.type == SDL_KEYUP)
+        if (evt.key.keysym.sym == SDLK_SPACE)
+          mvu_setSpace(model, false);
     }
     nk_input_end(ctx);
 

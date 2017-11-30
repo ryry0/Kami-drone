@@ -46,4 +46,5 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model);
 /** view : model -> msg */
 void  mvu_view(const mvu_model_t model, mvu_msg_t msg);
 
+void mvu_setSpace(mvu_model_t model, bool space_pressed);
 #endif
