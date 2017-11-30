@@ -16,6 +16,7 @@
 
 #include <mvu.h>
 
+#define NK_ZERO_COMMAND_MEMORY
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
@@ -66,6 +67,8 @@ int main(int argc, char* argv[])
   struct nk_color background;
   int win_width, win_height;
   int running = 1;
+  void *last_render_cmds;
+  size_t last_mem_alloc;
 
   /* GUI */
   struct nk_context *ctx;
@@ -121,6 +124,9 @@ int main(int argc, char* argv[])
   /*set_style(ctx, THEME_BLUE);*/
   /*set_style(ctx, THEME_DARK);*/
 
+  last_render_cmds = calloc(1, ctx->memory.allocated);
+  last_mem_alloc = ctx->memory.allocated;
+
   background = nk_rgb(28,48,62);
   while (running) {
     /* Input */
@@ -155,7 +161,21 @@ int main(int argc, char* argv[])
     if (nk_window_is_closed(ctx, window_name)) break;
 
     /* Draw */
+    void *cmds = nk_buffer_memory(&ctx->memory);
+    bool mem_alloc_is_diff = last_mem_alloc != ctx->memory.allocated;
+    int memcmp_result = memcmp(cmds, last_render_cmds, ctx->memory.allocated);
+
+    if ((mem_alloc_is_diff) || (memcmp_result != 0))
     {
+      //dynamic resize of last_render_cmds
+      if (mem_alloc_is_diff) {
+        free(last_render_cmds);
+        last_render_cmds = calloc(1, ctx->memory.allocated);
+        last_mem_alloc = ctx->memory.allocated;
+      }
+
+      memcpy(last_render_cmds, cmds, ctx->memory.allocated);
+
       float bg[4];
       nk_color_fv(bg, background);
       SDL_GetWindowSize(win, &win_width, &win_height);
@@ -171,6 +191,9 @@ int main(int argc, char* argv[])
       nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
       SDL_GL_SwapWindow(win);
     }
+    else
+      nk_clear(ctx);
+
     mvu_update(msg, model);
   } //end while
 
