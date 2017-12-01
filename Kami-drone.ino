@@ -27,8 +27,8 @@
 #define MOTOR_MAX_SPEED 1060
 #define MOTOR_CORRECTION_LOWERBOUND -MOTOR_MAX_SPEED
 
-#define TEST_PIN1 35
-#define TEST_PIN2 36
+#define TEST_PIN1 32
+#define TEST_PIN2 31
 
 #define FIL_ALPHA 0.995
 #define DELTA_TIME 0.002
@@ -260,13 +260,16 @@ void controlLoop() {
   accel_convertToGs(&kami_drone.accel_data);
   accel_calcAngle(&kami_drone.accel_data);
 
+  kami_drone.roll_dot = kami_drone.gyro_data.raw_roll_dot/GYRO_SCALING;
+  kami_drone.pitch_dot = kami_drone.gyro_data.raw_pitch_dot/GYRO_SCALING;
+
   kami_drone.roll = nm_expMovAvg(FIL_ALPHA,
     kami_drone.accel_data.roll,
-    kami_drone.roll + ((kami_drone.gyro_data.raw_roll_dot/GYRO_SCALING)*DELTA_TIME));
+    kami_drone.roll + ((kami_drone.roll_dot)*DELTA_TIME));
 
   kami_drone.pitch = nm_expMovAvg(FIL_ALPHA,
     kami_drone.accel_data.pitch,
-    kami_drone.pitch + ((kami_drone.gyro_data.raw_pitch_dot/GYRO_SCALING)*DELTA_TIME));
+    kami_drone.pitch + ((kami_drone.pitch_dot)*DELTA_TIME));
 
 
   //rebase axes to diagonals
@@ -275,6 +278,13 @@ void controlLoop() {
 
   kami_drone.pitch_shift = -inv_sqrt_2*(kami_drone.roll -
   kami_drone.pitch);
+
+  kami_drone.roll_dot_shift = -inv_sqrt_2*(-kami_drone.roll_dot -
+  kami_drone.pitch_dot);
+
+  kami_drone.pitch_dot_shift = -inv_sqrt_2*(kami_drone.roll_dot -
+  kami_drone.pitch_dot);
+
 
   //run pid
   if (kami_drone.state != STATE_LANDED) {
@@ -332,6 +342,10 @@ void loop() {
     USB_SERIAL.print(kami_drone.motor4_correction);
     USB_SERIAL.print("\tT ");
     USB_SERIAL.print(kami_drone.throttle);
+    USB_SERIAL.print("\tRDS ");
+    USB_SERIAL.print(kami_drone.roll_dot_shift);
+    USB_SERIAL.print("\tPDS ");
+    USB_SERIAL.print(kami_drone.pitch_dot_shift);
     USB_SERIAL.print("\n");
     delay(10);
   }
@@ -468,7 +482,6 @@ void handlePacket(pkt_generic_t *packet) {
       break;
 
     case PKT_TAKEOFF:
-      USB_SERIAL.println("takeoff");
       mtr_enable(&kami_drone.motor1);
       mtr_enable(&kami_drone.motor2);
       mtr_enable(&kami_drone.motor3);
