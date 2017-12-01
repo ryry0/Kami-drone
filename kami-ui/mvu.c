@@ -110,6 +110,9 @@ struct mvu_model_s {
   sr_port_t serial_port;
   tcp_connection_t tcp_conn;
 
+  float roll_commanded;
+  float pitch_commanded;
+
   bool read_data;
   bool space_pressed;
 
@@ -344,6 +347,23 @@ static void mvu_sendParamsMsg(mvu_model_t model) {
   }
 
   mvu_sendPacket(model, &params_message);
+  //mvu_forceSync(model);
+  //mvu_sendStartPacket(model);
+}
+
+
+static void mvu_sendCommandMsg(mvu_model_t model) {
+  pkt_generic_t command_message;
+  pkt_init(&command_message);
+  pkt_setHeader(&command_message, PKT_COMMAND, sizeof(pkt_command_t));
+  pkt_command_t *command_payload = pkt_interp(pkt_command_t,
+      command_message);
+
+  command_payload->roll_commanded = model->roll_commanded;
+  command_payload->pitch_commanded = model->pitch_commanded;
+  command_payload->throttle_commanded = model->parameters[PKT_TAKEOFF_THROTTLE];
+
+  mvu_sendPacket(model, &command_message);
   //mvu_forceSync(model);
   //mvu_sendStartPacket(model);
 }
