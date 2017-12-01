@@ -21,10 +21,11 @@
 #define MOTOR_PIN_3 38
 #define MOTOR_PIN_4 35
 #define PWM_FREQ 12000
-#define MOTOR_ZERO_CORRECTION -70
 #define MOTOR_ZERO_SPEED 385
-#define MOTOR_TAKEOFF_SPEED 45
+#define MOTOR_TAKEOFF_SPEED 400
+#define MOTOR_QUERY_SPEED 400
 #define MOTOR_MAX_SPEED 1060
+#define MOTOR_CORRECTION_LOWERBOUND -MOTOR_MAX_SPEED
 
 #define TEST_PIN1 35
 #define TEST_PIN2 36
@@ -214,10 +215,12 @@ void setupDrone() {
   mtr_init(&kami_drone.motor4, MOTOR_PIN_4);
   pkt_init((pkt_generic_t *) &kami_drone.packet);
 
-  pid_init((pid_data_t *) &kami_drone.roll_pid, 0, 0, 0, MOTOR_ZERO_CORRECTION,
-    MOTOR_MAX_SPEED);
-  pid_init((pid_data_t *) &kami_drone.pitch_pid, 0, 0, 0, MOTOR_ZERO_CORRECTION,
-    MOTOR_MAX_SPEED);
+  pid_init((pid_data_t *) &kami_drone.roll_pid, 0, 0, 0,
+      MOTOR_CORRECTION_LOWERBOUND,
+      MOTOR_MAX_SPEED);
+  pid_init((pid_data_t *) &kami_drone.pitch_pid, 0, 0, 0,
+      MOTOR_CORRECTION_LOWERBOUND,
+      MOTOR_MAX_SPEED);
 }
 
 void setup() {
@@ -412,14 +415,14 @@ void handlePacket(pkt_generic_t *packet) {
         param_payload->float_params[PKT_ROLL_KP],
         param_payload->float_params[PKT_ROLL_KI],
         param_payload->float_params[PKT_ROLL_KD],
-        MOTOR_ZERO_CORRECTION,
+        MOTOR_CORRECTION_LOWERBOUND,
         MOTOR_MAX_SPEED);
 
       pid_setConstants((pid_data_t *) &kami_drone.pitch_pid,
         param_payload->float_params[PKT_PITCH_KP],
         param_payload->float_params[PKT_PITCH_KI],
         param_payload->float_params[PKT_PITCH_KD],
-        MOTOR_ZERO_CORRECTION,
+        MOTOR_CORRECTION_LOWERBOUND,
         MOTOR_MAX_SPEED);
 
       break;
@@ -444,10 +447,10 @@ void handlePacket(pkt_generic_t *packet) {
       mtr_enable(&kami_drone.motor3);
       mtr_enable(&kami_drone.motor4);
 
-      mtr_setSpeed(&kami_drone.motor1, 25);
-      mtr_setSpeed(&kami_drone.motor2, 25);
-      mtr_setSpeed(&kami_drone.motor3, 25);
-      mtr_setSpeed(&kami_drone.motor4, 25);
+      mtr_setSpeed(&kami_drone.motor1, MOTOR_QUERY_SPEED);
+      mtr_setSpeed(&kami_drone.motor2, MOTOR_QUERY_SPEED);
+      mtr_setSpeed(&kami_drone.motor3, MOTOR_QUERY_SPEED);
+      mtr_setSpeed(&kami_drone.motor4, MOTOR_QUERY_SPEED);
 
       delay(500);
 
