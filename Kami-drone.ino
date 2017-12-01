@@ -22,8 +22,8 @@
 #define MOTOR_PIN_4 35
 #define PWM_FREQ 12000
 #define MOTOR_ZERO_SPEED 385
-#define MOTOR_TAKEOFF_SPEED 400
-#define MOTOR_QUERY_SPEED 400
+#define MOTOR_TAKEOFF_SPEED 410
+#define MOTOR_QUERY_SPEED 410
 #define MOTOR_MAX_SPEED 1060
 #define MOTOR_CORRECTION_LOWERBOUND -MOTOR_MAX_SPEED
 
@@ -123,7 +123,7 @@ typedef struct kami_drone_s {
   float pitch_commanded;
 
   uint16_t throttle;
-  uint8_t takeoff_throttle;
+  uint16_t takeoff_throttle;
 
   uint8_t tcp_conn_loss_index;
 
@@ -330,6 +330,8 @@ void loop() {
     USB_SERIAL.print(kami_drone.motor3_correction);
     USB_SERIAL.print("\tM4 ");
     USB_SERIAL.print(kami_drone.motor4_correction);
+    USB_SERIAL.print("\tT ");
+    USB_SERIAL.print(kami_drone.throttle);
     USB_SERIAL.print("\n");
     delay(10);
   }
@@ -466,6 +468,7 @@ void handlePacket(pkt_generic_t *packet) {
       break;
 
     case PKT_TAKEOFF:
+      USB_SERIAL.println("takeoff");
       mtr_enable(&kami_drone.motor1);
       mtr_enable(&kami_drone.motor2);
       mtr_enable(&kami_drone.motor3);
