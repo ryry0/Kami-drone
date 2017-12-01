@@ -22,9 +22,9 @@
 #define MOTOR_PIN_4 35
 #define PWM_FREQ 12000
 #define MOTOR_ZERO_CORRECTION -70
-#define MOTOR_ZERO_SPEED 24
+#define MOTOR_ZERO_SPEED 385
 #define MOTOR_TAKEOFF_SPEED 45
-#define MOTOR_MAX_SPEED 70
+#define MOTOR_MAX_SPEED 1060
 
 #define TEST_PIN1 35
 #define TEST_PIN2 36
@@ -72,10 +72,10 @@ Adafruit_SSD1306 display(OLED_RESET);
 typedef struct mtr_drone_s {
   bool enabled;
   uint8_t pin;
-  uint8_t speed;
+  uint16_t speed;
 } mtr_drone_t;
 
-void mtr_setSpeed(volatile mtr_drone_t *mtr, uint8_t speed) {
+void mtr_setSpeed(volatile mtr_drone_t *mtr, uint16_t speed) {
   if (mtr->enabled)
     mtr->speed = nm_constrain(speed, MOTOR_ZERO_SPEED, MOTOR_MAX_SPEED);
   else
@@ -121,7 +121,7 @@ typedef struct kami_drone_s {
   float roll_commanded;
   float pitch_commanded;
 
-  uint8_t throttle;
+  uint16_t throttle;
   uint8_t takeoff_throttle;
 
   uint8_t tcp_conn_loss_index;
@@ -161,6 +161,7 @@ void setupPWM() {
   pinMode(MOTOR_PIN_3, OUTPUT);
   pinMode(MOTOR_PIN_4, OUTPUT);
   analogWriteFrequency(MOTOR_PIN_1, PWM_FREQ);
+  analogWriteResolution(12);
 }
 
 void setupWire() {
@@ -559,12 +560,22 @@ void handleKeyCommands(struct kami_drone_s *kami_drone, uint8_t rec_byte) {
       break;
 
     case '+':
-      kami_drone->throttle += 5;
+      kami_drone->throttle += 50;
+      USB_SERIAL.println(kami_drone->throttle);
+      break;
+
+    case '=':
+      kami_drone->throttle -= 50;
+      USB_SERIAL.println(kami_drone->throttle);
+      break;
+
+    case '_':
+      kami_drone->throttle += 1;
       USB_SERIAL.println(kami_drone->throttle);
       break;
 
     case '-':
-      kami_drone->throttle -= 5;
+      kami_drone->throttle -= 1;
       USB_SERIAL.println(kami_drone->throttle);
       break;
 
