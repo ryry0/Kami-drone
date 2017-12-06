@@ -303,9 +303,16 @@ void controlLoop() {
   //run pid
   if (kami_drone.state != STATE_LANDED) {
     //ROLL AXIS
+    float roll_vel_command = pid_FeedbackCtrl(
+        (pid_data_t *) &kami_drone.roll_pid,
+        kami_drone.roll_commanded,
+        kami_drone.roll_shift,
+        DELTA_TIME,
+        pid_velocUpdate);
+
     kami_drone.motor2_correction = -0.5*pid_FeedbackCtrl(
         (pid_data_t *) &kami_drone.roll_vel_pid,
-        kami_drone.roll_commanded,
+        roll_vel_command,
         kami_drone.roll_dot_shift,
         DELTA_TIME,
         pid_velocUpdate);
@@ -313,9 +320,16 @@ void controlLoop() {
     kami_drone.motor4_correction = -kami_drone.motor2_correction;
 
     //PITCH AXIS
+    float pitch_vel_command = pid_FeedbackCtrl(
+        (pid_data_t *) &kami_drone.pitch_pid,
+        kami_drone.pitch_commanded,
+        kami_drone.pitch_shift,
+        DELTA_TIME,
+        pid_velocUpdate);
+
     kami_drone.motor1_correction = -0.5*pid_FeedbackCtrl(
         (pid_data_t *) &kami_drone.pitch_vel_pid,
-        kami_drone.pitch_commanded,
+        pitch_vel_command,
         kami_drone.pitch_dot_shift,
         DELTA_TIME,
         pid_velocUpdate);
