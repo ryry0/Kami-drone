@@ -28,6 +28,8 @@ typedef enum pkt_type_e {
   PARAM(PKT_PITCH_KI)                   \
   PARAM(PKT_PITCH_KD)                   \
   PARAM(PKT_TAKEOFF_THROTTLE)       \
+  PARAM(PKT_ROLL_COMMAND)       \
+  PARAM(PKT_PITCH_COMMAND)       \
   PARAM(PKT_PARAM_MAX)              \
 
 #define GENERATE_ENUM(ENUM) ENUM,

@@ -75,6 +75,13 @@ void pid_setConstants(pid_data_t *pid,
     float max_integral_guard);
 
 /**
+ * \brief zeros the output and the error and prev output buffers.
+ *
+ * \param pid The pid struct.
+ */
+void pid_zeroContents(pid_data_t *pid);
+
+/**
  * \brief Performs a traditional PID calculation
  *
  * \param pid The pid struct.

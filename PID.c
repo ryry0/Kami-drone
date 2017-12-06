@@ -18,6 +18,11 @@ void pid_init(pid_data_t *pid, float proportional_gain,
   rb_setBuffer(&pid->output_buffer_ring, pid->output_buffer);
 
   //set contents of ring buffers to zero
+  pid_zeroContents(pid);
+}
+
+void pid_zeroContents(pid_data_t *pid) {
+  //set contents of ring buffers to zero
   rb_init(&pid->error_buffer_ring, PID_BUFFER_SIZE);
   rb_init(&pid->output_buffer_ring, PID_BUFFER_SIZE);
   pid->pid_output = 0;

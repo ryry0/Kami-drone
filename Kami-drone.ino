@@ -288,25 +288,33 @@ void controlLoop() {
 
   //run pid
   if (kami_drone.state != STATE_LANDED) {
+    //ROLL AXIS
     kami_drone.motor2_correction = -0.5*pid_FeedbackCtrl(
         (pid_data_t *) &kami_drone.roll_pid,
         kami_drone.roll_commanded,
         kami_drone.roll_shift,
         DELTA_TIME,
-        pid_minPIUpdate);
+        pid_velocUpdate);
 
     kami_drone.motor4_correction = -kami_drone.motor2_correction;
 
+    //PITCH AXIS
     kami_drone.motor1_correction = -0.5*pid_FeedbackCtrl(
         (pid_data_t *) &kami_drone.pitch_pid,
         kami_drone.pitch_commanded,
         kami_drone.pitch_shift,
         DELTA_TIME,
-        pid_minPIUpdate);
+        pid_velocUpdate);
 
     kami_drone.motor3_correction = -kami_drone.motor1_correction;
-
   }
+  else {
+    kami_drone.motor1_correction = 0;
+    kami_drone.motor2_correction = 0;
+    kami_drone.motor3_correction = 0;
+    kami_drone.motor4_correction = 0;
+  }
+
   digitalWriteFast(TEST_PIN2, LOW);
 }
 
@@ -346,6 +354,8 @@ void loop() {
     USB_SERIAL.print(kami_drone.roll_dot_shift);
     USB_SERIAL.print("\tPDS ");
     USB_SERIAL.print(kami_drone.pitch_dot_shift);
+    USB_SERIAL.print("\tCR ");
+    USB_SERIAL.print(kami_drone.roll_commanded);
     USB_SERIAL.print("\n");
     delay(10);
   }
@@ -422,10 +432,14 @@ void handlePacket(pkt_generic_t *packet) {
       mtr_disable(&kami_drone.motor3);
       mtr_disable(&kami_drone.motor4);
       kami_drone.state = STATE_LANDED;
+      pid_zeroContents(&kami_drone.roll_pid);
+      pid_zeroContents(&kami_drone.pitch_pid);
       break;
 
     case PKT_SET_PARAMS:
       kami_drone.takeoff_throttle = param_payload->float_params[PKT_TAKEOFF_THROTTLE];
+      kami_drone.roll_commanded = param_payload->float_params[PKT_ROLL_COMMAND];
+      kami_drone.pitch_commanded = param_payload->float_params[PKT_PITCH_COMMAND];
 
       pid_setConstants((pid_data_t *) &kami_drone.roll_pid,
         param_payload->float_params[PKT_ROLL_KP],
