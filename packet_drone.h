@@ -24,9 +24,15 @@ typedef enum pkt_type_e {
   PARAM(PKT_ROLL_KP)                   \
   PARAM(PKT_ROLL_KI)                   \
   PARAM(PKT_ROLL_KD)                   \
+  PARAM(PKT_ROLL_VEL_KP)                   \
+  PARAM(PKT_ROLL_VEL_KI)                   \
+  PARAM(PKT_ROLL_VEL_KD)                   \
   PARAM(PKT_PITCH_KP)                   \
   PARAM(PKT_PITCH_KI)                   \
   PARAM(PKT_PITCH_KD)                   \
+  PARAM(PKT_PITCH_VEL_KP)                   \
+  PARAM(PKT_PITCH_VEL_KI)                   \
+  PARAM(PKT_PITCH_VEL_KD)                   \
   PARAM(PKT_TAKEOFF_THROTTLE)       \
   PARAM(PKT_ROLL_COMMAND)       \
   PARAM(PKT_PITCH_COMMAND)       \

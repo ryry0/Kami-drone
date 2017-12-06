@@ -136,6 +136,8 @@ typedef struct kami_drone_s {
 
   pid_data_t roll_pid;
   pid_data_t pitch_pid;
+  pid_data_t roll_vel_pid;
+  pid_data_t pitch_vel_pid;
 
   float motor1_correction;
   float motor2_correction;
@@ -221,6 +223,13 @@ void setupDrone() {
   pid_init((pid_data_t *) &kami_drone.pitch_pid, 0, 0, 0,
       MOTOR_CORRECTION_LOWERBOUND,
       MOTOR_MAX_SPEED);
+
+  pid_init((pid_data_t *) &kami_drone.roll_vel_pid, 0, 0, 0,
+      MOTOR_CORRECTION_LOWERBOUND,
+      MOTOR_MAX_SPEED);
+  pid_init((pid_data_t *) &kami_drone.pitch_vel_pid, 0, 0, 0,
+      MOTOR_CORRECTION_LOWERBOUND,
+      MOTOR_MAX_SPEED);
 }
 
 void setup() {
@@ -257,12 +266,15 @@ void controlLoop() {
   digitalWriteFast(TEST_PIN2, HIGH);
   digitalWriteFast(TEST_PIN1, LOW);
 
+  //get g's and accel angle
   accel_convertToGs(&kami_drone.accel_data);
   accel_calcAngle(&kami_drone.accel_data);
 
+  //get angular vels
   kami_drone.roll_dot = kami_drone.gyro_data.raw_roll_dot/GYRO_SCALING;
   kami_drone.pitch_dot = kami_drone.gyro_data.raw_pitch_dot/GYRO_SCALING;
 
+  //complementary filter
   kami_drone.roll = nm_expMovAvg(FIL_ALPHA,
     kami_drone.accel_data.roll,
     kami_drone.roll + ((kami_drone.roll_dot)*DELTA_TIME));
@@ -273,12 +285,14 @@ void controlLoop() {
 
 
   //rebase axes to diagonals
+  //angles
   kami_drone.roll_shift = -inv_sqrt_2*(-kami_drone.roll -
   kami_drone.pitch);
 
   kami_drone.pitch_shift = -inv_sqrt_2*(kami_drone.roll -
   kami_drone.pitch);
 
+  //velocity
   kami_drone.roll_dot_shift = -inv_sqrt_2*(-kami_drone.roll_dot -
   kami_drone.pitch_dot);
 
@@ -290,9 +304,9 @@ void controlLoop() {
   if (kami_drone.state != STATE_LANDED) {
     //ROLL AXIS
     kami_drone.motor2_correction = -0.5*pid_FeedbackCtrl(
-        (pid_data_t *) &kami_drone.roll_pid,
+        (pid_data_t *) &kami_drone.roll_vel_pid,
         kami_drone.roll_commanded,
-        kami_drone.roll_shift,
+        kami_drone.roll_dot_shift,
         DELTA_TIME,
         pid_velocUpdate);
 
@@ -300,9 +314,9 @@ void controlLoop() {
 
     //PITCH AXIS
     kami_drone.motor1_correction = -0.5*pid_FeedbackCtrl(
-        (pid_data_t *) &kami_drone.pitch_pid,
+        (pid_data_t *) &kami_drone.pitch_vel_pid,
         kami_drone.pitch_commanded,
-        kami_drone.pitch_shift,
+        kami_drone.pitch_dot_shift,
         DELTA_TIME,
         pid_velocUpdate);
 
@@ -432,8 +446,10 @@ void handlePacket(pkt_generic_t *packet) {
       mtr_disable(&kami_drone.motor3);
       mtr_disable(&kami_drone.motor4);
       kami_drone.state = STATE_LANDED;
-      pid_zeroContents(&kami_drone.roll_pid);
-      pid_zeroContents(&kami_drone.pitch_pid);
+      pid_zeroContents((pid_data_t *) &kami_drone.roll_pid);
+      pid_zeroContents((pid_data_t *) &kami_drone.pitch_pid);
+      pid_zeroContents((pid_data_t *) &kami_drone.roll_vel_pid);
+      pid_zeroContents((pid_data_t *) &kami_drone.pitch_vel_pid);
       break;
 
     case PKT_SET_PARAMS:
@@ -452,6 +468,20 @@ void handlePacket(pkt_generic_t *packet) {
         param_payload->float_params[PKT_PITCH_KP],
         param_payload->float_params[PKT_PITCH_KI],
         param_payload->float_params[PKT_PITCH_KD],
+        MOTOR_CORRECTION_LOWERBOUND,
+        MOTOR_MAX_SPEED);
+
+      pid_setConstants((pid_data_t *) &kami_drone.roll_vel_pid,
+        param_payload->float_params[PKT_ROLL_VEL_KP],
+        param_payload->float_params[PKT_ROLL_VEL_KI],
+        param_payload->float_params[PKT_ROLL_VEL_KD],
+        MOTOR_CORRECTION_LOWERBOUND,
+        MOTOR_MAX_SPEED);
+
+      pid_setConstants((pid_data_t *) &kami_drone.pitch_vel_pid,
+        param_payload->float_params[PKT_PITCH_VEL_KP],
+        param_payload->float_params[PKT_PITCH_VEL_KI],
+        param_payload->float_params[PKT_PITCH_VEL_KD],
         MOTOR_CORRECTION_LOWERBOUND,
         MOTOR_MAX_SPEED);
 
