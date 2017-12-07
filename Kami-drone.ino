@@ -122,6 +122,8 @@ typedef struct kami_drone_s {
   float roll_commanded;
   float pitch_commanded;
 
+  bool takeoff_motors_enabled;
+
   uint16_t throttle;
   uint16_t takeoff_throttle;
 
@@ -205,6 +207,7 @@ void setupDrone() {
   kami_drone.throttle = MOTOR_ZERO_SPEED;
   kami_drone.takeoff_throttle = MOTOR_TAKEOFF_SPEED;
   kami_drone.tcp_conn_loss_index = 0;
+  kami_drone.takeoff_motors_enabled = false;
 
   kami_drone.motor1_correction = 0;
   kami_drone.motor2_correction = 0;
@@ -470,6 +473,8 @@ void handlePacket(pkt_generic_t *packet) {
       kami_drone.takeoff_throttle = param_payload->float_params[PKT_TAKEOFF_THROTTLE];
       kami_drone.roll_commanded = param_payload->float_params[PKT_ROLL_COMMAND];
       kami_drone.pitch_commanded = param_payload->float_params[PKT_PITCH_COMMAND];
+      kami_drone.takeoff_motors_enabled =
+        param_payload->float_params[PKT_TAKEOFF_MOTORS_ENABLED];
 
       pid_setConstants((pid_data_t *) &kami_drone.roll_pid,
         param_payload->float_params[PKT_ROLL_KP],
@@ -540,10 +545,12 @@ void handlePacket(pkt_generic_t *packet) {
       break;
 
     case PKT_TAKEOFF:
-      mtr_enable(&kami_drone.motor1);
-      mtr_enable(&kami_drone.motor2);
-      mtr_enable(&kami_drone.motor3);
-      mtr_enable(&kami_drone.motor4);
+      if (kami_drone.takeoff_motors_enabled) {
+        mtr_enable(&kami_drone.motor1);
+        mtr_enable(&kami_drone.motor2);
+        mtr_enable(&kami_drone.motor3);
+        mtr_enable(&kami_drone.motor4);
+      }
       kami_drone.throttle = kami_drone.takeoff_throttle;
       kami_drone.state = STATE_FLYING;
       break;
