@@ -293,7 +293,7 @@ static void mvu_sendStartPacket(mvu_model_t model) {
   mvu_sendPacket(model, &start_message);
 }
 
-static void mvu_sendHeaderMsg(mvu_model_t model, pkt_type_t type) {
+void mvu_sendHeaderMsg(mvu_model_t model, pkt_type_t type) {
   pkt_generic_t header_message;
   pkt_setHeaderTypeOnly(&header_message, type);
   mvu_sendPacket(model, &header_message);

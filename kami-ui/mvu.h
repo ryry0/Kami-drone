@@ -12,6 +12,7 @@
 #include <nuklear.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <packet_drone.h>
 
 typedef struct mvu_model_s *mvu_model_t;
 typedef struct mvu_msg_s *mvu_msg_t;
@@ -47,4 +48,6 @@ void mvu_update(const mvu_msg_t msg, mvu_model_t model);
 void  mvu_view(const mvu_model_t model, mvu_msg_t msg);
 
 void mvu_setSpace(mvu_model_t model, bool space_pressed);
+
+void mvu_sendHeaderMsg(mvu_model_t model, pkt_type_t type);
 #endif

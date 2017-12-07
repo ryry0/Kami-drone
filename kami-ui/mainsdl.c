@@ -158,6 +158,15 @@ int main(int argc, char* argv[])
       if (evt.type == SDL_KEYUP)
         if (evt.key.keysym.sym == SDLK_SPACE)
           mvu_setSpace(model, false);
+
+      if (evt.type == SDL_JOYBUTTONDOWN) {
+          printf("%d button pressed \n", evt.jbutton.button);
+          mvu_sendHeaderMsg(model, PKT_QUERY);
+      }
+      if (evt.type == SDL_JOYBUTTONUP) {
+          printf("%d button up \n", evt.jbutton.button);
+      }
+
     }
     nk_input_end(ctx);
 
@@ -214,6 +223,7 @@ int main(int argc, char* argv[])
 
 cleanup:
   nk_sdl_shutdown();
+  SDL_JoystickClose(x360_gamepad);
   SDL_GL_DeleteContext(glContext);
   SDL_DestroyWindow(win);
   SDL_Quit();
