@@ -249,13 +249,13 @@ void setup() {
   accel_calibrate(&kami_drone.accel_data);
   gyro_calibrate(&kami_drone.gyro_data);
   */
-  kami_drone.accel_data.x_off = -3;
-  kami_drone.accel_data.y_off = -5;
-  kami_drone.accel_data.z_off = 62;
+  kami_drone.accel_data.x_off = -24;
+  kami_drone.accel_data.y_off = -29;
+  kami_drone.accel_data.z_off = 61;
 
-  kami_drone.gyro_data.roll_dot_off = -50;
-  kami_drone.gyro_data.pitch_dot_off = 21;
-  kami_drone.gyro_data.yaw_dot_off = -14;
+  kami_drone.gyro_data.roll_dot_off = -45;
+  kami_drone.gyro_data.pitch_dot_off = 14;
+  kami_drone.gyro_data.yaw_dot_off = -1;
 
   control_timer.begin(controlLoop, LOOP_CLOSURE_US);
 }
