@@ -112,6 +112,7 @@ struct mvu_model_s {
 
   float roll_commanded;
   float pitch_commanded;
+  uint16_t throttle_commanded;
 
   bool read_data;
   bool space_pressed;
@@ -352,16 +353,21 @@ static void mvu_sendParamsMsg(mvu_model_t model) {
 }
 
 
-static void mvu_sendCommandMsg(mvu_model_t model) {
+void mvu_sendCommandMsg(mvu_model_t model, float roll, float pitch, uint16_t
+    throttle) {
   pkt_generic_t command_message;
   pkt_init(&command_message);
   pkt_setHeader(&command_message, PKT_COMMAND, sizeof(pkt_command_t));
   pkt_command_t *command_payload = pkt_interp(pkt_command_t,
       command_message);
 
+  model->roll_commanded = roll;
+  model->pitch_commanded = pitch;
+  model->throttle_commanded = throttle + model->parameters[PKT_TAKEOFF_THROTTLE];
+
   command_payload->roll_commanded = model->roll_commanded;
   command_payload->pitch_commanded = model->pitch_commanded;
-  command_payload->throttle_commanded = model->parameters[PKT_TAKEOFF_THROTTLE];
+  command_payload->throttle_commanded = model->throttle_commanded;
 
   mvu_sendPacket(model, &command_message);
   //mvu_forceSync(model);

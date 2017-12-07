@@ -41,6 +41,10 @@
 #define LEN(a) (sizeof(a)/sizeof(a)[0])
 #define TRIANGLE_BUTTON 3
 #define X_BUTTON 0
+#define R_BUMPER 5
+#define R_TRIGGER 5
+#define R_TRIGGER_DEADZONE 12000
+#define MAX_THROTTLE 200
 
 
 /* ===============================================================
@@ -167,14 +171,23 @@ int main(int argc, char* argv[])
           if (evt.jbutton.button == TRIANGLE_BUTTON)
             mvu_sendHeaderMsg(model, PKT_QUERY);
 
-          if (evt.jbutton.button == X_BUTTON)
+          if (evt.jbutton.button == X_BUTTON || evt.jbutton.button == R_BUMPER)
             mvu_sendHeaderMsg(model, PKT_TAKEOFF);
       }
       if (evt.type == SDL_JOYBUTTONUP) {
           printf("%d button up \n", evt.jbutton.button);
 
-          if (evt.jbutton.button == X_BUTTON)
+          if (evt.jbutton.button == X_BUTTON || evt.jbutton.button == R_BUMPER)
             mvu_sendHeaderMsg(model, PKT_KILL);
+      }
+      if (evt.type == SDL_JOYAXISMOTION) {
+        if (evt.jaxis.axis == R_TRIGGER) {
+          int32_t val = evt.jaxis.value + 32768;
+          val = val > R_TRIGGER_DEADZONE? (val - R_TRIGGER_DEADZONE) : 0;
+          val = (float) val/(65535 - R_TRIGGER_DEADZONE) * MAX_THROTTLE;
+          printf("axis %d value %d\n", evt.jaxis.axis, val);
+          mvu_sendCommandMsg(model, 0, 0, val);
+        }
       }
     }
     nk_input_end(ctx);

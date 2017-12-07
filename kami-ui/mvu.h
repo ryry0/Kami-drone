@@ -17,6 +17,7 @@
 typedef struct mvu_model_s *mvu_model_t;
 typedef struct mvu_msg_s *mvu_msg_t;
 
+
 /** TODO: fix docs. */
 
 mvu_msg_t mvu_createMessage();
@@ -50,4 +51,8 @@ void  mvu_view(const mvu_model_t model, mvu_msg_t msg);
 void mvu_setSpace(mvu_model_t model, bool space_pressed);
 
 void mvu_sendHeaderMsg(mvu_model_t model, pkt_type_t type);
+
+void mvu_sendCommandMsg(mvu_model_t model, float roll, float pitch, uint16_t
+    throttle);
+
 #endif
