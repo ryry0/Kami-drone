@@ -39,6 +39,8 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) < (b) ? (b) : (a))
 #define LEN(a) (sizeof(a)/sizeof(a)[0])
+#define TRIANGLE_BUTTON 3
+#define X_BUTTON 0
 
 
 /* ===============================================================
@@ -161,12 +163,19 @@ int main(int argc, char* argv[])
 
       if (evt.type == SDL_JOYBUTTONDOWN) {
           printf("%d button pressed \n", evt.jbutton.button);
-          mvu_sendHeaderMsg(model, PKT_QUERY);
+
+          if (evt.jbutton.button == TRIANGLE_BUTTON)
+            mvu_sendHeaderMsg(model, PKT_QUERY);
+
+          if (evt.jbutton.button == X_BUTTON)
+            mvu_sendHeaderMsg(model, PKT_TAKEOFF);
       }
       if (evt.type == SDL_JOYBUTTONUP) {
           printf("%d button up \n", evt.jbutton.button);
-      }
 
+          if (evt.jbutton.button == X_BUTTON)
+            mvu_sendHeaderMsg(model, PKT_KILL);
+      }
     }
     nk_input_end(ctx);
 
