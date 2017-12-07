@@ -64,6 +64,8 @@ int main(int argc, char* argv[])
   /* Platform */
   SDL_Window *win;
   SDL_GLContext glContext;
+  SDL_Joystick* x360_gamepad = NULL;
+
   struct nk_color background;
   int win_width, win_height;
   int running = 1;
@@ -78,7 +80,7 @@ int main(int argc, char* argv[])
 
   /* SDL setup */
   SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
-  SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_EVENTS);
+  SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_EVENTS| SDL_INIT_JOYSTICK);
   SDL_GL_SetAttribute (SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
   SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -128,6 +130,19 @@ int main(int argc, char* argv[])
   last_mem_alloc = ctx->memory.allocated;
 
   background = nk_rgb(28,48,62);
+
+  if ( SDL_NumJoysticks() < 1) {
+    printf("No Joy connected\n");
+  }
+  else {
+    x360_gamepad = SDL_JoystickOpen(0);
+    if ( x360_gamepad == NULL )
+      printf("Error openning gamepad %s\n", SDL_GetError() );
+    else
+      printf("Gamepad Connected\n");
+
+  }
+
   while (running) {
     /* Input */
     SDL_Event evt;
