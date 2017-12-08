@@ -47,9 +47,9 @@
 #define Y_AXIS 4
 #define R_TRIGGER_DEADZONE 12000
 #define MAX_THROTTLE 200
-#define MAX_ANGLE 10
+#define MAX_ANGLE 30
 
-#define STREAM_DELAY 4
+#define STREAM_DELAY 5
 
 /* ===============================================================
  *
@@ -160,6 +160,11 @@ int main(int argc, char* argv[])
 
     nk_input_begin(ctx);
     while (SDL_PollEvent(&evt)) {
+      static int32_t thrust_val = 0;
+      static float roll_val = 0;
+      static float pitch_val = 0;
+      static float prev_roll = 0;
+      static float prev_pitch = 0;
       if (evt.type == SDL_QUIT) goto cleanup;
       nk_sdl_handle_event(&evt);
       if (evt.type == SDL_KEYDOWN)
@@ -183,16 +188,16 @@ int main(int argc, char* argv[])
           printf("%d button up \n", evt.jbutton.button);
 
           if (evt.jbutton.button == X_BUTTON || evt.jbutton.button == R_BUMPER)
+            {
             mvu_sendHeaderMsg(model, PKT_KILL);
+            thrust_val = 0;
+            roll_val = 0;
+            pitch_val = 0;
+            }
       }
 
       if (time_delay++ > STREAM_DELAY) {
         if (evt.type == SDL_JOYAXISMOTION) {
-          static int32_t thrust_val = 0;
-          static float roll_val = 0;
-          static float pitch_val = 0;
-          static float prev_roll = 0;
-          static float prev_pitch = 0;
           if (evt.jaxis.axis == R_TRIGGER) {
             thrust_val = evt.jaxis.value + 32768;
             thrust_val = thrust_val > R_TRIGGER_DEADZONE? (thrust_val - R_TRIGGER_DEADZONE) : 0;
@@ -212,7 +217,7 @@ int main(int argc, char* argv[])
             }
           }
           else if (evt.jaxis.axis == Y_AXIS) {
-            pitch_val = evt.jaxis.value;
+            pitch_val = -evt.jaxis.value;
             pitch_val = abs(pitch_val) > R_TRIGGER_DEADZONE? copysignf((abs(pitch_val) - R_TRIGGER_DEADZONE),pitch_val) : 0;
             pitch_val = (float) pitch_val/(32767 - R_TRIGGER_DEADZONE) * MAX_ANGLE;
             if (!((prev_pitch == 0) && (pitch_val == 0))) {
