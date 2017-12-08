@@ -43,9 +43,13 @@
 #define X_BUTTON 0
 #define R_BUMPER 5
 #define R_TRIGGER 5
+#define X_AXIS 3
+#define Y_AXIS 4
 #define R_TRIGGER_DEADZONE 12000
 #define MAX_THROTTLE 200
+#define MAX_ANGLE 10
 
+#define STREAM_DELAY 4
 
 /* ===============================================================
  *
@@ -77,6 +81,7 @@ int main(int argc, char* argv[])
   int running = 1;
   void *last_render_cmds;
   size_t last_mem_alloc;
+  size_t time_delay = 0;
 
   /* GUI */
   struct nk_context *ctx;
@@ -180,13 +185,44 @@ int main(int argc, char* argv[])
           if (evt.jbutton.button == X_BUTTON || evt.jbutton.button == R_BUMPER)
             mvu_sendHeaderMsg(model, PKT_KILL);
       }
-      if (evt.type == SDL_JOYAXISMOTION) {
-        if (evt.jaxis.axis == R_TRIGGER) {
-          int32_t val = evt.jaxis.value + 32768;
-          val = val > R_TRIGGER_DEADZONE? (val - R_TRIGGER_DEADZONE) : 0;
-          val = (float) val/(65535 - R_TRIGGER_DEADZONE) * MAX_THROTTLE;
-          printf("axis %d value %d\n", evt.jaxis.axis, val);
-          mvu_sendCommandMsg(model, 0, 0, val);
+
+      if (time_delay++ > STREAM_DELAY) {
+        if (evt.type == SDL_JOYAXISMOTION) {
+          static int32_t thrust_val = 0;
+          static float roll_val = 0;
+          static float pitch_val = 0;
+          static float prev_roll = 0;
+          static float prev_pitch = 0;
+          if (evt.jaxis.axis == R_TRIGGER) {
+            thrust_val = evt.jaxis.value + 32768;
+            thrust_val = thrust_val > R_TRIGGER_DEADZONE? (thrust_val - R_TRIGGER_DEADZONE) : 0;
+            thrust_val = (float) thrust_val/(65535 - R_TRIGGER_DEADZONE) * MAX_THROTTLE;
+            //printf("axis %d value %d\n", evt.jaxis.axis, val);
+            mvu_sendCommandMsg(model, roll_val, pitch_val, thrust_val);
+            time_delay = 0;
+          }
+          else if (evt.jaxis.axis == X_AXIS) {
+            roll_val = evt.jaxis.value;
+            roll_val = abs(roll_val) > R_TRIGGER_DEADZONE? copysignf((abs(roll_val) - R_TRIGGER_DEADZONE),roll_val) : 0;
+            roll_val = (float) roll_val/(32767 - R_TRIGGER_DEADZONE) * MAX_ANGLE;
+            if (!((prev_roll == 0) && (roll_val == 0))) {
+              printf("axis %f roll_value %f\n", evt.jaxis.axis, roll_val);
+              mvu_sendCommandMsg(model, roll_val, pitch_val, thrust_val);
+              prev_roll = roll_val;
+            }
+          }
+          else if (evt.jaxis.axis == Y_AXIS) {
+            pitch_val = evt.jaxis.value;
+            pitch_val = abs(pitch_val) > R_TRIGGER_DEADZONE? copysignf((abs(pitch_val) - R_TRIGGER_DEADZONE),pitch_val) : 0;
+            pitch_val = (float) pitch_val/(32767 - R_TRIGGER_DEADZONE) * MAX_ANGLE;
+            if (!((prev_pitch == 0) && (pitch_val == 0))) {
+              printf("axis %f pitch_value %f\n", evt.jaxis.axis, pitch_val);
+              mvu_sendCommandMsg(model, roll_val, pitch_val, thrust_val);
+              prev_pitch = pitch_val;
+            }
+          }
+
+          //printf("axis %d value %d\n", evt.jaxis.axis, evt.jaxis.value);
         }
       }
     }
