@@ -257,6 +257,13 @@ void setup() {
   kami_drone.gyro_data.pitch_dot_off = 14;
   kami_drone.gyro_data.yaw_dot_off = -1;
 
+  WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
+  WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
+  delayMicroseconds(1);
+  WDOG_STCTRLH = 0x001;
+  WDOG_TOVALL =200;
+  WDOG_TOVALH = 0;
+  WDOG_PRESC = 0;
   control_timer.begin(controlLoop, LOOP_CLOSURE_US);
 }
 
@@ -410,6 +417,8 @@ void loop() {
   }
 
   handleWifi((kami_drone_t *) &kami_drone);
+  WDOG_REFRESH = 0xA602;
+  WDOG_REFRESH = 0xB480;
 }
 
 void handleWifi(struct kami_drone_s *kami_drone) {
