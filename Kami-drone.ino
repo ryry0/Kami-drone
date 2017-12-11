@@ -129,6 +129,7 @@ typedef struct kami_drone_s {
 
   bool usb_print;
   bool wifi_debug;
+  bool rate_mode;
 
   pkt_generic_t packet;
 
@@ -205,6 +206,7 @@ void setupDrone() {
   kami_drone.throttle = MOTOR_ZERO_SPEED;
   kami_drone.takeoff_throttle = MOTOR_TAKEOFF_SPEED;
   kami_drone.tcp_conn_loss_index = 0;
+  kami_drone.rate_mode = false;
 
   kami_drone.motor1_correction = 0;
   kami_drone.motor2_correction = 0;
@@ -303,14 +305,19 @@ void controlLoop() {
   //run pid
   if (kami_drone.state != STATE_LANDED) {
     //ROLL AXIS
-    float roll_vel_command = kami_drone.roll_commanded;
-    /*pid_FeedbackCtrl(
+    float roll_vel_command = 0;
+    float pitch_vel_command = 0;
+    if (kami_drone.rate_mode) {
+      roll_vel_command = kami_drone.roll_commanded;
+    }
+    else {
+      roll_vel_command = pid_FeedbackCtrl(
         (pid_data_t *) &kami_drone.roll_pid,
         kami_drone.roll_commanded,
         kami_drone.roll_shift,
         DELTA_TIME,
         pid_velocUpdate);
-    */
+    }
 
     kami_drone.motor2_correction = -0.5*pid_FeedbackCtrl(
         (pid_data_t *) &kami_drone.roll_vel_pid,
@@ -322,14 +329,17 @@ void controlLoop() {
     kami_drone.motor4_correction = -kami_drone.motor2_correction;
 
     //PITCH AXIS
-    float pitch_vel_command = kami_drone.pitch_commanded;
-    /*pid_FeedbackCtrl(
+    if (kami_drone.rate_mode) {
+      pitch_vel_command = kami_drone.pitch_commanded;
+    }
+    else {
+      pitch_vel_command = pid_FeedbackCtrl(
         (pid_data_t *) &kami_drone.pitch_pid,
         kami_drone.pitch_commanded,
         kami_drone.pitch_shift,
         DELTA_TIME,
         pid_velocUpdate);
-    */
+    }
 
     kami_drone.motor1_correction = -0.5*pid_FeedbackCtrl(
         (pid_data_t *) &kami_drone.pitch_vel_pid,
@@ -503,6 +513,7 @@ void handlePacket(pkt_generic_t *packet) {
         MOTOR_CORRECTION_LOWERBOUND,
         MOTOR_MAX_SPEED);
 
+      kami_drone.rate_mode = param_payload->float_params[PKT_RATE_MODE];
       break;
 
     case PKT_GET_PARAMS:
